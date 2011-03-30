@@ -1,0 +1,18 @@
+#
+# This directory contains a CUDA project for computing 2D Canny edge
+# on NVIDIA GPU.
+# 
+# To compile, copy this directory into NVIDIA's SDK projects sub-directory
+# and type make. Then put the resulting executable somewhere in your path.
+#
+# There is also a pure C-language implementation (cannyEdge2D_host.c).
+# A comparison benchmark done on a Intel(R) Core(TM)2 CPU 6420  @ 2.13GHz 
+# equiped with a graphics board GeForce 8800 GTS (320 MB of RAM) with OS
+# Ubuntu 7.10 (64 bits) shows that you can reach an acceleration factor of
+# x8 to x11 by running this Canny edge detector on the GPU instead of the CPU.
+#
+# To use it in xsmurf, you just need to replace the wtmmg loop by a shell call
+# to cannyEdge2D_cuda (located in your CUDA SDK binary sub-dir).
+#
+# Pierre Kestener, April 2008.
+# CEA, IRFU, Saclay, France.

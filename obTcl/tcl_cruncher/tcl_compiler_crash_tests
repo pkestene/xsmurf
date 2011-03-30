@@ -1,0 +1,108 @@
+#
+# test code for tcl pseudo compiler(s)...
+#   shows some weirdness of tcl syntax/semantic !
+# (C) 9/1994 by Laurent Demailly
+#
+# part of tcl_cruncher-x.tar.gz package.
+#
+# $Id: tcl_compiler_crash_tests,v 1.1 1999/05/06 15:12:46 decoster Exp $
+#
+set toto   [  
+  tutu titi  "wrd1   \
+  
+ 
+      wrd2"
+    ]xy
+# -> set toto [tutu titi "wrd1    wrd2"]xy  (4 spaces)
+[tutu titi ]xy titi tata
+set pouet "hj [ cmd1   arg1   
+    cmd2 {
+} ; cmd3 tutu ; while 1 {
+  cmdw1   ;cmdw2
+ 
+  }
+
+ ] nn"
+# -> set pouet "hj [cmd1 arg1
+#cmd2 {
+#}
+#cmd3 tutu
+#while 1 {cmdw1
+#cmdw2}] nn"
+
+proc tst1 {} {
+  set sum 0;
+  # boucle 0-100
+  for {set counter 0} {$counter<100} {incr counter} {
+    # somation des 100 premiers entiers
+    incr sum $counter;
+  }
+}
+# -> proc tst1 {} {set sum 0
+#for {set counter 0} {$counter<100} {incr counter} {incr sum $counter}}
+
+proc toto {args} {
+  # comment
+
+     first    arg1   \
+
+
+   arg2 {
+# keep this one
+  straight };cm2;while 1 {
+
+   script level2;
+
+};newcmd
+
+}
+#proc toto {args} {first arg1 arg2 {
+## keep this one
+#  straight }
+#cm2
+#while 1 {script level2}
+#newcmd}
+
+if ![string compare $c \{] { 
+puts toto
+}
+#->if ![string compare $c \{] {puts toto}
+
+
+# 'dangerous' comment block :
+# { blah... {
+# jkkjkj }
+# (unmatched brace)
+
+toto
+
+# this one is fine
+# { { \{ kkjkj
+# }
+
+# jhjh }
+# (matched brace)
+
+if {!$keep} {pack forget $w.dups; #$w.dups.m unpost}
+set manx(links) ""
+#->if {!$keep} {pack forget $w.dups}
+#set manx(links) ""
+ 
+
+# like the next one : (thx to Lindsay)
+proc fred {ggg} {
+# {
+set dfgdfd fjdjfjf}jkdjdjd
+}
+
+puts toto{tata
+puts tututiti
+proc toto {} {
+puts toto{tata
+puts tututiti
+# end of comment  }
+}
+# if the comment above is removed, the script becomes unparsable !!
+# so flag 'puts toto{tata' inside proc as error ?...
+# (what tcl_cruncher does)
+

@@ -1,0 +1,69 @@
+.TH tcl_cruncher 1 "V1.11 - 13 September 1994" "dl's free utilities"
+.SH NAME
+
+tcl_cruncher \- A Tcl pseudo compiler and syntax checker
+
+.SH SYNOPSIS
+
+.B tcl_cruncher
+[\-1] [\-c] [\-s] [\-t] [\-d def-file] file names | \-
+
+.SH DESCRIPTION
+.BR tcl_cruncher
+transform nice Tcl/TclX/Itcl sources into an ugly but
+faster standard output : it removes all unneeded white spaces, ; ,
+all comments, etc... the result is unreadable, but can be twice as
+fast & as small than original.
+It can also be used to check syntax of your programs.
+It does all this very fast. 
+Result is on standard output, warnings and/or errors are on standard error.
+
+.SH OPTIONS
+.TP
+.I "\-1"
+keeps first comments (ie #! /usr/local/bin/wish -f and # (c)...)
+
+.TP
+.I "\-c"
+performs check only, no standard output
+
+.TP
+.I "\-s"
+disables switch warnings, brace in comments warnings, and processed
+line count output
+
+.TP
+.I "\-t"
+shows the all the commands of the script, in a 'calling tree' form
+on stderr (use it like in tcl_cruncher -tcs  ... |& more for best
+result) it can help to detect problems in your code. Experimental
+feature.
+
+.TP
+.I "\-d definition-file"
+provides for adding new recognized commands without
+recompiling. The definition file should be a text file, each line
+of 2 words, first word is a new command name, second word, the name of
+a basic tcl/tclX/itcl command already understood by tcl_cruncher.
+Example, if you have your own command 'cmd' that have 1 argument
+which is a script, like the itcl 'destructor' command, just put in a
+text file the line : "cmd destructor" and cmd will be analyzed.
+
+.SH WARNINGS
+switch ?o? v {p1 {s1} p2 {s2}} construct is not optimized
+you should do it by hand for full speed, or use the
+switch ?o? v p1 {s1} p2 {s2} ... construct instead.
+
+
+.SH EXAMPLES
+"tcl_cruncher *.tcl > lib.tclc" 'compiles' everything into lib.tclc.
+"tcl_cruncher -cs *.tcl" makes a good syntax checker.
+
+To use it from inside tcl, re-define for instance :
+
+  proc source file {uplevel #0 [exec tcl_cruncher -s $file]}
+
+and all your sourced files will then be auto-magically speeded up.
+
+.SH AUTHOR
+Laurent Demailly <dl@hplyot.obspm.fr>. Free software.

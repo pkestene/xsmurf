@@ -1,0 +1,19 @@
+###############################################################################
+We kindly request that you cite XSMURF in your publications and presentations. 
+We suggest the following citations as appropriate:
+###############################################################################
+
+For journal articles, proceedings, etc:
+---------------------------------------
+A. Arneodo, N. Decoster, P. Kestener, and S.G. Roux. A wavelet-based method for multifractal image analysis: from theoretical concepts to experimental applications., volume 126 of Advances in Imaging and Electron Physics, pages 1-98. Academic Press, 2003.
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+if you use the 3D WTMM computation functions, please cite also:
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+P. Kestener and A. Arneodo. A three-dimensional wavelet based multifractal method : about the need of revisiting the multifractal description of turbulence dissipation data. Phys. Rev. Lett., 91:194501, 2003. 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+if you use the vector field WTMM computation functions, please cite also:
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+P. Kestener and A. Arneodo. Generalizing the wavelet-based multifractal formalism to vector-valued random fields: application to turbulent velocity and vorticity 3D numerical data. Phys. Rev. Lett., 93:044501, 2004. 

@@ -1,0 +1,72 @@
+############################
+# avant toute chose :      #
+# ce makefile est merdique #
+############################
+
+# remember automatic variables
+# $@ : target
+# $< : 1st requisite
+# $^ : all the requisites
+
+
+# fftw lib (single precision)
+# libmatheval
+FFTW_INC = -I/usr/include
+FFTW_LIB = -L/usr/lib -lsrfftw -L/usr/lib -lsfftw -lmatheval
+
+CC = gcc
+AR = ar
+ARFLAGS = cr
+GENGETOPT = gengetopt
+
+#CFLAGS =  -O3 -g -pg
+CFLAGS =  -O3 -g
+WARNING = -Wall
+#WARNING = 
+
+# main files
+LIB_FILES = $(wildcard ./lib/*.c)
+#LIB_FILES = 
+LIB_OBJS  = $(LIB_FILES:.c=.o)
+
+
+# program files
+GGO_FILES  = $(wildcard $(PROG_SRC_DIR)/*.ggo)
+TMP        = $(GGO_FILES:.ggo=.c)
+CGGO_FILES = $(TMP2:./%=./cmd_%)
+
+PROG_FILES = cannyEdge2D_host.c
+
+EXE = $(PROG_FILES:.c=)
+
+.PHONY : clean all
+
+all : libedge prog
+
+# automatic rule to create object files associated with sources in "lib"
+# sub-directory
+./lib/%.o : ./lib/%.c
+	$(CC) -c $(CFLAGS) $(WARNING) -I./lib $(FFTW_INC) $< -o $@
+
+./lib/libedge.a : $(LIB_OBJS)
+	$(AR) $(ARFLAGS) $@ $(LIB_OBJS)
+
+libedge : ./lib/libedge.a
+
+
+# automatic rules to generate command line parser source files associated
+# with sources in "prog" sub-directory
+./cmd_%.c : ./%.ggo
+	$(GENGETOPT) -i$< -F$(@:.c=) --long-help -u
+#        sed 's/src\/prog\///' $@ > tmpfile
+#        mv tmpfile $@
+
+prog:  $(CGGO_FILES) cannyEdge2D_host
+
+cannyEdge2D_host : $(LIB_OBJS) cannyEdge2D_host.c cmd_cannyEdge2D_host.c
+	$(CC) $(CFLAGS) $(WARNING) -I./lib -o $@ ./$@.c ./cmd_$@.c  -L./lib -ledge  $(FFTW_LIB) -lm
+
+
+clean:
+	-rm -f *.o */*.o */*.a *~ */*~ cannyEdge2D_host tmp
+

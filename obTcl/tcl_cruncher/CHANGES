@@ -1,0 +1,22 @@
+tcl_cruncher Changes log :
+--------------------------
+1.11 @braces in comments (like everything) were completly ignored. In tcl
+     they aren't (!) and can really 'close' a opened brace (!).
+     (thx to Dan Schenck for pointing this out)
+     tcl_cruncher now allows this (but warn 'cause its not imo a good coding
+     practice). It also keep up /warn about brace (un)matching inside comments.
+1.10 @Bug fix, when first char of a word is \x, space bewteen word was missed
+     (thx to Christophe.Samtmann for pointing out)
+     added experimental -t that shows on stderr the calling tree of the script
+1.9 @license change, header change
+1.8 @fixed bug "set c [toto].c"-> "..] .c"
+     added -1 for keeping first comments
+1.7 @spell checking
+1.6 @added sample new compiled source tcl proc
+1.5 @added -d, forgot state change needed for [] commands
+1.4 @working nicely, -c check only if ok, added support for ${xxx}, catch
+     illegal use of { inside words inside constructs...
+1.3 @added syntax checks
+     now bug : ${varname} isn't recognised...
+1.2 @works!!!
+1.1 @Initial revision

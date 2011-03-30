@@ -1,0 +1,8 @@
+# Directory to save temporary files.
+set tmp_dir /tmp
+
+# Editor to use with the command "edit".
+set sm_editor /usr/bin/emacs
+
+# Directory where macros are defined.
+set macros_lib "/home/pkestene"

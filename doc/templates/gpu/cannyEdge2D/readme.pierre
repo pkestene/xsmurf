@@ -1,0 +1,8 @@
+
+temps de calcul 5 octaves, 10 voix:
+
+taille / CPU   / GPU  / acceleration
+
+512    /   6.11/  0.53/ 11.5
+1024   /  25.69/  2.33/ 11.0
+2048   / 106.28/ 11.75/  9.0

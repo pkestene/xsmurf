@@ -1,0 +1,70 @@
+.Dd May 27, 2007
+.Dt XSMURF 1
+.Sh NAME
+xsmurf \- Tcl/Tk based console for multifractal image processing
+.Sh SYNOPSIS
+.Nm xsmurf
+.Op Fl nodisplay
+.Op Fl nocolormap
+.Op Ar files ...
+.Sh DESCRIPTION
+.Nm Xsmurf
+is an graphical Application Programming Interface for image processing.
+Xsmurf is devoted to multifractal image
+analysis and implements the 2D/3D WTMM (Wavelet Transform Maxima Modulus) 
+methodology (for both scalar and vector fields). 
+Graphical user interface is based on Tk Console
+(http://tkcon.sourceforge.net/) and provide a customized Tcl shell 
+(WTMM specific commands are interfaced to C-defined routines). 
+Supported image file formats include PGM, TIF, ... (8bits or 16bits).
+
+.br
+The distribution comes with a few example scripts and tutorials
+ (see doc directory). Type help in the console to have a list of available
+ commands.
+
+
+The options are as follows:
+.Bl -tag -width Fl
+.It Fl nodisplay
+Create a prompt in current terminal window.
+.It Fl nocolormap
+Trick to avoid colormap initialization.
+.It Ar files ...
+File must be a Tcl script, all instructions found in this 
+file are interpreted and executed by xsmurf.
+
+.El
+
+Some Xsmurf documentation and scientific papers about the 2D/3D WTMM methodology
+can be found at:
+.Pp
+http://pierre.kestener.free.fr/
+
+.Sh HISTORY & CREDITS
+
+Xsmurf begin life as an PhD project at Centre de Recherche Paul Pascal (CRPP), Bordeaux, France in 1996.  At that time it was called simply 'smurf' ...
+
+.Sh SEE ALSO
+.Xr 
+
+.Sh BUGS
+Probably many still remaining.
+
+.Sh AUTHORS
+Nicolas Decoster (Nicolas.Decoster@Noveltis.fr)
+.br
+Pierre Kestener  (pierre.kestener@free.fr)
+
+.Sh COPYRIGHT
+Copyright (c) 1996-1999 by Nicolas Decoster
+.br
+Copyright (c) 1999-2007 by Pierre Kestener.
+
+Centre de Recherche Paul Pascal, Bordeaux, France.
+.br
+Ecole Normale Superieure de Lyon, Lyon, France.
+.br
+CEA DSM/DAPNIA/SEDI, centre Saclay, France.
+
+.sp 1

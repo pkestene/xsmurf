@@ -1,0 +1,18 @@
+OK --> modifier ibro3D pour que ca cree une image dans xsmurf et pas un fichier
+
+OK --> creer i3D_to_vtk (sur le modele de buffer3D_to_vtk mais avec lx,ly,lz differents)
+
+NO --> modifier vector3D_to_vtk : tailles differentes....
+
+OK faire attention aux histoires row-major etc...
+
+
+OK (version 2.3) --> creer un wtmmg3d et wtmmg3d_vector dans imStudy.tcl 
+
+OK --> ecrire wtmm3d
+
+OK -> replace defunc-1.3 by GNU libmatheval (as a suprise libmatheval gets inspired by defunc !!!)
+
+port cygwin 
+  --> probleme de colormap (get color by name)
+  --> probleme avec iaff (visual 32bits tatati tatata)

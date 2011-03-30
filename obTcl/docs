@@ -1,0 +1,78 @@
+
+catch {destroy $obW.docs}
+
+PanedWindow $obW.docs -fraction {.25 .75} -resize {s} -borderwidth 2
+
+TkManText $obW.docs.tktext
+
+ScrolledText $obW.docs.titles \
+	-scrollbars y -textrelief sunken -autoy true \
+	-writable 0 -cursor arrow -spacing1 1 -spacing3 1 \
+	-background grey80
+
+ScrolledText $obW.docs.text \
+	-useTextWidget $obW.docs.tktext \
+	-textrelief sunken \
+	-writable 0 \
+	-background grey80
+
+$obW.docs manage $obW.docs.titles $obW.docs.text
+pack configure $obW.docs.titles $obW.docs.text -pady 1 -padx 0
+
+update
+
+set idx "obTcl man page"
+set list [concat [list $idx] [lsort [DOC_get_list]]]
+set TkMan($idx) obTcl.tkman
+
+set currDoc ""
+
+proc MyGetDOC name {
+	global TkMan demoRoot
+	if [info exists TkMan($name)] {
+		return [exec cat $demoRoot/$TkMan($name)]
+	} else {
+		return "\$t insert end {[GetDOC $name]}"
+	}
+}
+
+proc getDoc { name tag } {
+	global obW currDoc savedPos lastTag
+
+	set savedPos($currDoc) [lindex [$obW.docs.text yview] 0]
+	$obW.docs.text delete 0.0 end
+	$obW.docs.tktext tkman_insert [MyGetDOC $name]
+	if [info exists savedPos($name)] {
+		$obW.docs.text yview moveto $savedPos($name)
+	}
+	set currDoc $name
+	if [info exists lastTag] {
+		$obW.docs.titles tag configure $lastTag -relief flat
+	}
+	$obW.docs.titles tag configure $tag -relief raised -borderwidth 1
+	set lastTag $tag
+}
+
+set nl ""
+set cnt 0
+
+proc hot tag {
+	global obW
+	$obW.docs.titles tag configure $tag -foreground red
+}
+proc cool tag {
+	global obW
+	$obW.docs.titles tag configure $tag -foreground black
+}
+
+foreach i $list {
+	$obW.docs.titles tag bind row$cnt <B1-ButtonRelease-1> \
+		[list getDoc $i row$cnt]
+	$obW.docs.titles tag bind row$cnt <B1-Motion><ButtonRelease-1> {break}
+	$obW.docs.titles tag bind row$cnt <Enter> "hot row$cnt"
+	$obW.docs.titles tag bind row$cnt <Leave> "cool row$cnt"
+	$obW.docs.titles insert end "$nl" 
+	$obW.docs.titles insert end " $i " row$cnt
+	incr cnt
+	set nl "\n"
+}

@@ -1,0 +1,66 @@
+README - 1.11.1 - $Id: README,v 1.1 1999/05/06 15:12:46 decoster Exp $
+
+ tcl_cruncher : A TCL pseudo compiler and/or syntax checker
+   Copyright 9/1994 by Laurent Demailly (dl@hplyot.obspm.fr)
+
+ This program transforms nice Tcl/TclX/Itcl sources into an ugly but
+ faster standard output : it removes all unneeded white spaces, ; ,
+ all comments, etc... the result is unreadable, but can be twice as
+ fast & as small than original.
+ It can also be used to check syntax of your programs.
+ It does all this very fast.
+
+ Usage: tcl_cruncher [-t] [-1] [-c] [-s] [-d more-definitions-file] file names
+                     or '-' for standard output.
+
+ using -t shows the all the commands of the script, in a 'calling tree' form
+           on stderr (use it like in tcl_cruncher -tcs  ... |& more for best
+           result) it can help to detect problems. Experimental feature.
+
+ using -1 keeps first comments (ie #! /usr/local/bin/wish -f and (c)...)
+
+ using -s disable switch & brace in comments warnings and processed
+          line count output
+
+ using -c performs check only (no stdoutput)
+
+ using -d option provides for adding new recognized commands without
+   recompiling, ie you have your own command 'cmd' that have 1 argument
+   which is a script, like the itcl 'destructor' command, just put in a
+   text file the line : "cmd destructor" and cmd will be analyzed !
+
+ Example: "tcl_cruncher *.tcl > lib.tclc" 'compiles' everything into lib.tclc
+          "tcl_cruncher -cs *.tcl" makes a good syntax checker
+
+ to use it from inside tcl, re-define for instance :
+   proc source file {uplevel #0 [exec tcl_cruncher -s $file]}
+ and all your sourced files will then be auto-magically speeded up
+
+ Warnings:
+        + switch ?o? v {p1 {s1} p2 {s2}} construct is not optimized
+          you should do it by hand for full speed, or use the
+          switch ?o? v p1 {s1} p2 {s2} ... construct...
+        + "if ... elseif ..." can be misinterpreted in tree mode. (-t)
+
+ It compiles with gcc -ansi -pedantic -Wall -O without any problem
+ (tested on hpux : add -D_HPUX_SOURCE and linux) if you don't have
+ an ansi compiler, grab gcc, or ansi2kr, or remove prototypes & const...
+ (see Makefile)
+
+ Free software - 'Artistic' license (see file LICENSE), summary :
+
+ You can use, copy modify & distribute freely as long as credit to
+ original author is maintained, source is provided & changes you make
+ to the original are clearly stated.
+
+ This software is provided "as is" without express or implied warranty.
+
+ latest version is always on ftp hplyot.obspm.fr:/tcl/tcl_cruncher*
+
+ There is a mailing list, to get informed about new versions, and also
+ to discuss tcl compilation & syntax checks related subjects, if you
+ want to subscribe : send  "susbscribe tcl_cruncher firstname name"
+ (without quotes "") to <listserv@hplyot.obspm.fr> in the mail *body*
+
+ please send bugs/patches/suggestions/love letters... to dl@hplyot.obspm.fr
+ (or to the list)

@@ -1,0 +1,18 @@
+In this directory, you will find:
+
+- examples:
+  some test scripts illustrating step-by-step the computations of the WTMM edges
+
+- html:
+  some documentation associated to the TCL scripts located in ../tcl_library
+
+- tcldoc:
+  a usefull tool used to generate the documentation located in html directory
+
+- tutorial_tcl:
+  this directory contains a copy of the valuable tcl tutorial from Clif Flynt
+  (http://www.msen.com/~clif/TclTutor.html)
+
+- xpvtkbook.pdf:
+  a very introduction to the use of both Tcl/Tk with the VTK visualization library
+

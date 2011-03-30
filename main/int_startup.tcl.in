@@ -1,0 +1,63 @@
+# int_startup.tcl --
+#
+#   Copyright (c) 1998-1999 Nicolas Decoster.
+#   Copyright (c) 1998-1999 Centre de Recherche Paul Pascal, Bordeaux, France.
+#
+#   Copyright (c) 1999-2007 Pierre Kestener.
+#   Copyright (c) 1999-2002 Centre de Recherche Paul Pascal, Bordeaux, France.
+#   Copyright (c) 2002-2003 Ecole Normale Superieure de Lyon, Lyon, France.
+#   Copyright (c) 2003-2007 CEA DSM/DAPNIA/SEDI, centre Saclay, France.
+#
+#
+
+#set dev_dir @SM_SRC_DIR@
+set dev_dir @abs_top_srcdir@
+#set dev_dir @top_builddir@
+set pid [eval pid]
+set viewNb 0
+set tcl_precision 17
+set smurf_lib "${dev_dir}/tcl_library"
+set obTcl_lib "${dev_dir}/obTcl"
+set auto_path "$auto_path $smurf_lib $smurf_lib/obtcl $macros_lib $obTcl_lib"
+
+option add *background       grey70
+option add *foreground       black
+option add *activeForeground white
+option add *activeBackground grey50
+option add *font             7x14
+
+proc catchAndStay__ {script} {
+    set thePath [pwd]
+    set code [catch $script result]
+    #puts $result
+    cd $thePath
+}
+
+catchAndStay__ [list auto_mkindex $smurf_lib *.tcl]
+catchAndStay__ [list obtcl_mkindex ${smurf_lib}/obtcl *.tcl]
+catchAndStay__ [list auto_mkindex $macros_lib *.tcl]
+
+catchAndStay__ [list pkg_mkIndex $smurf_lib *.tcl *.so]
+catchAndStay__ [list pkg_mkIndex $macros_lib *.tcl]
+
+rename catchAndStay__ {}
+
+font create my_font -family helvetica -weight bold -size 13
+
+set bmp_num 0
+#wm withdraw .
+
+## old tkcon version
+#source $smurf_lib/tkcon.tcl
+#tkConInit
+
+## new tkcon version
+#namespace eval ::tkcon {}
+# we want to have only the main interpreter
+source $smurf_lib/tkcon.tcl
+set ::tkcon::OPT(exec) ""
+set ::tkcon::OPT(font) {courier 15}
+
+tkcon::Init
+tkcon title "Xsmurf  - Tkcon $::tkcon::VERSION"
+

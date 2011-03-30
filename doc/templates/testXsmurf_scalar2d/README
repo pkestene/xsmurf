@@ -1,0 +1,57 @@
+To run this example, xsmurf must be installed somewhere in your path.
+
+#####################
+To run in batch mode:
+#####################
+   nohup xsmurf -nodisplay scr_gaussian.tcl > logFile &
+or
+   nohup xsmurf -nodisplay scr_mexican.tcl > logFile &
+
+To run with interactive window:
+   xsmurf scr_gaussian.tcl &
+or
+   xsmurf scr_mexican.tcl &
+
+############################
+To change some parameters
+############################
+Edit parameters_gaussian.tcl
+For example, you can change the number of octaves (noct) 
+or the number of vox per octave (nvox).
+
+If you have a recent Nvidia graphics card (GeForce 8 series), and the Cuda SDK
+installed in you path, you can try to use the GPU to compute the WTMM edges.
+First, you need compile the cannyEdge2d project. To do this just copy the
+directory $(top_of_xsmurf_sources)/doc/templates/gpu/cannyEdge2D in the 
+projects directory of your CUDA SDK, go into this directory and type make; this
+will install the binary executable cannyEdge2D_cuda in your CUDA SDK 
+bin/linux/release sub-directory. Be sure to have this in your path.
+You can then turn on the use of the GPU in xsmurf, by setting useGPU to 1, 
+in the current parameters_gaussian.tcl file.
+
+With a GeForce8 8800 GTS boards, we have seen an acceleration of 8 times
+in the execution time of the computation of the WTMM edges compared to a 
+purely CPU execution (usetGPU set to 0).
+
+#################################
+To visualize partition functions:
+#################################
+launch xsmurf
+   ./xsmurf
+type the following command:
+   ist init -filename parameters_gaussian.tcl
+   source average_pf.tcl
+   ist average gaussian 0 3
+
+
+DATA: 2D Fractional Brownian field
+data are generated with the xsmurf command ibro
+inside the scr_gaussian.tcl script.
+
+more information about this command:
+   help ibro
+
+
+
+To clean this directory:
+rm -Rf bro* *.eps pf logFile *~

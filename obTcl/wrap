@@ -1,0 +1,314 @@
+
+class WrapWidget
+
+set funcs {\
+	button
+	canvas
+	checkbutton
+	entry
+	frame
+	label
+	listbox
+	menu
+	menubutton
+	message
+	radiobutton
+	scale
+	scrollbar
+	text
+	toplevel}
+
+proc initClassVec {} {
+	global funcs tkClassToClass
+	foreach i $funcs {
+		set capital [string toupper [string index $i 0]]
+		set rest [string range $i 1 end]
+		set tkClassToClass(${capital}$rest) $i
+	}
+	set tkClassToClass(Wish) "Widget"
+}
+
+proc wrapClass widget {
+	global wrapped
+	if [string compare "" [info commands ${widget}_tk]] { return }
+	rename $widget ${widget}_tk
+	class $widget
+	$widget inherit Widget
+	$widget method init args "
+		global SeeCreation wrapped
+		if {\$SeeCreation} {
+			puts \"$widget \$self \$args\"
+		}
+		eval next ${widget}_tk \$args
+		set wrapped(\$self) 1
+	"
+	$widget method destroy args "
+		global SeeDestruction wrapped
+		if {\$SeeDestruction} {
+			puts \"destroy \$self\"
+		}
+		next
+		unset wrapped(\$self)
+	"
+	$widget method unknown args "
+		global SeeCalls SeeRetval
+		if {\$SeeCalls} {
+			puts \"\$self \$method \$args\"
+		}
+		set ret \[eval {\${self}-cmd \$method} \$args\]
+		if {\$SeeRetval && \$ret != \"\"} {
+			puts \"\${self} returned: \$ret\"
+		}
+		return \$ret
+	"
+	set wrapped($widget) 1
+}
+
+proc unwrapClass widget {
+	global wrapped
+	if ![string compare "" [info commands ${widget}_tk]] { return }
+
+	if [info exists wrapped($widget)] {
+		set all [$widget info objects]
+		$widget destroy
+		rename ${widget}_tk ${widget}
+		unwrapTkObjects $all
+		unset wrapped($widget)
+	}
+}
+
+proc unwrapTkObjects all {
+	global wrapped
+	foreach i $all {
+		if [info exists wrapped($i)] {
+			$i destroy -keepwin
+			unset wrapped($i)
+		}
+	}
+}
+WrapWidget method wrapAllWidgets node {
+	global tkClassToClass wrapped
+
+	if ![info exists tkClassToClass([winfo class $node])] {
+		# Not a base-level primitive (perhaps a mega-widget)
+		return
+	}
+	foreach i [winfo children $node] {
+		$class::wrapAllWidgets $i
+	}
+	if [is_object $node] { return }
+	if [info exists wrapped($node)] { return }
+
+	$tkClassToClass([winfo class $node]) $node
+	set wrapped($node) 1
+}
+
+WrapWidget method unwrapAllWidgets root {
+	foreach i [winfo children $root] {
+		$class::unwrapAllWidgets $i
+	}
+	if [is_object $root] {
+		unwrapTkObjects $root
+	}
+}
+
+WrapWidget method wrapTkClass widget {
+	global wrapped
+
+	if ![info exists wrapped($widget)] {
+		wrapClass $widget
+		set wrapped($widget) 1
+	}
+}
+
+WrapWidget method unwrap widget {
+	global wrapped
+
+	if [info exists wrapped($widget)] {
+		unwrapClass $widget
+	}
+}
+
+WrapWidget method list {} {
+	global wrapped
+	set all {}
+	foreach i [array names wrapped] {
+		if [string compare "" [info procs $i]] {
+			lappend all $i
+		} else {
+			puts stderr \
+			  "Woops! '$i' in array wrapped(), but has no proc!"
+		}
+	}
+	return $all
+}
+
+WrapWidget method trace args {
+	global SeeCreation SeeDestruction SeeCalls SeeRetval
+	foreach i $args {
+		switch -glob $i {
+		creat*	{ set SeeCreation 1 }
+		~creat*	{ set SeeCreation 0 }
+		destr*	{ set SeeDestruction 1 }
+		~destr*	{ set SeeDestruction 0 }
+		calls	{ set SeeCalls 1 }
+		~calls	{ set SeeCalls 0 }
+		ret*	{ set SeeRetval 1 }
+		~ret*	{ set SeeRetval 0 }
+		}
+	}
+}
+
+WrapWidget method wrapWidgets { {roots .} } {
+	foreach i $roots {
+		$class::wrapAllWidgets $i
+	}
+}
+WrapWidget method wrapAll { {roots .} } {
+	global funcs
+	foreach i $funcs {
+		$class::wrapTkClass $i
+	}
+	$class::wrapWidgets $roots
+}
+WrapWidget method unwrapAll {} {
+	global funcs wrapped
+	foreach i $funcs {
+		$class::unwrap $i
+	}
+	if [is_object .] {
+		unwrapTkObjects .
+	}
+	unset wrapped
+}
+
+initClassVec
+
+WrapWidget new wrap
+wrap trace ~creation ~destruction ~calls ~retval
+
+#----------------------------------------------------------------------
+# Check status of `widget' demo, set button states accordingly
+#----------------------------------------------------------------------
+
+proc ChkButtons {} {
+	global obW wrapped
+	if ![winfo exists $obW.wrap] { return }
+
+	if [winfo exists .t] {
+		$obW.wrap.start configure -state disabled
+		$obW.wrap.stop configure -state active
+	} else {
+		$obW.wrap.stop configure -state disabled
+		$obW.wrap.start configure -state active
+	}
+	if [info exists wrapped] {
+		$obW.wrap.wrap configure -state disabled
+		$obW.wrap.unwrap configure -state active
+		checkB active
+	} else {
+		$obW.wrap.unwrap configure -state disabled
+		$obW.wrap.wrap configure -state active
+		checkB disabled
+	}
+	after 1000 ChkButtons
+}
+
+proc checkB state {
+	global obW
+	foreach i {create destroy calls retvals} {
+		$obW.wrap.$i configure -state $state
+	} 
+}
+
+
+catch {destroy $obW.wrap}
+
+#----------------------------------------------------------------------
+# Wrapper demo panel
+#----------------------------------------------------------------------
+
+#----------------------------------------------------------------------
+# Create the main panel as a Layout widget and define the layout.
+# 	`Layout' is an experimental extension to `pack'.  See Layout.tcl.
+#
+Layout $obW.wrap -borderwidth 0 -define \
+    \
+    { wrap y "u2 exp fill ix5 iy5 -background grey80"
+	{ text x "|0 exp fill px5 -background grey80" }
+	{ panel y "_1 exp fill px5 py5 -background grey80"
+	    { * y "|0 exp -background grey80"
+		{ * x "h3 py3 -background grey80" }
+		{ * x "px10 -fill x -background grey80"
+			{ start x "exp -anchor e" }
+			{ stop  x "exp -anchor w" }
+		}
+		{ * x "px10 -fill x -background grey80"
+			{ wrap   x "exp -anchor e" }
+			{ unwrap x "exp -anchor w" }
+		}
+		{ * x "h3 py3 -background grey80" }
+		{ * y "u2 iy5 ix5 py0 px0 -expand 0"
+			{ label y "iy5" }
+			{ trace y "" }
+		}
+		{ * x "h3 py3 -background grey80" }
+	    }
+	}
+    }
+
+button $obW.wrap.start -text "Start widget demo" -command WidgetDemo \
+	-width 15 -bd 2
+button $obW.wrap.stop -text "Stop widget demo" -command StopWidgetDemo \
+	-width 15 -bd 2
+button $obW.wrap.wrap -text "Wrap all widgets" -command {
+	wrap wrapAll . } -width 15 -bd 2
+button $obW.wrap.unwrap -text "Unwrap all widgets" -command {
+	wrap unwrapAll } -width 15 -state disabled -bd 2
+checkbutton $obW.wrap.create -text "Creation" -variable SeeCreation \
+	-width 12 -anchor w
+checkbutton $obW.wrap.destroy -text "Destruction" -variable SeeDestruction \
+	-width 12 -anchor w
+checkbutton $obW.wrap.calls -text "Calls" -variable SeeCalls \
+	-width 12 -anchor w
+checkbutton $obW.wrap.retvals -text "Return values" -variable SeeRetval \
+	-width 12 -anchor w
+
+label $obW.wrap.label -text "Traces"
+frame $obW.wrap.trace
+pack	$obW.wrap.create $obW.wrap.destroy \
+	$obW.wrap.calls $obW.wrap.retvals \
+	 -side top -in $obW.wrap.trace
+
+ScrolledText $obW.wrap.t -relief flat -borderwidth 10 -highlightthickness 0 \
+	-wrap word -height 16 -width 60 -scrollbars y \
+	-background grey80
+
+$obW.wrap.t insert end \
+"This demo demonstrates the ability to construct transparent\
+widget objects.  It does so by wrapping all widget-creation commands\
+and widgets from standard Tk into obTcl-objects.
+
+You can start the `widget' demo first, and turn on wrapping after,\
+or start with wrapping turned on.
+
+You can trace widget configuration and invokation\
+when widgets are wrapped.  Trace messages are printed on stdout.
+
+Note: running the demo with wrapped widgets may be slow on some\
+machines.  You would normally not wrap basic Tk-widgets, so this particular\
+demo doesn't tell you much about obTcl's performance in normal usage.\
+"
+
+$obW.wrap.t configure -state disabled -textrelief flat -autoy true
+
+$obW.wrap manage \
+	start	$obW.wrap.start \
+	stop	$obW.wrap.stop \
+	wrap	$obW.wrap.wrap \
+	unwrap	$obW.wrap.unwrap \
+	label	$obW.wrap.label \
+	trace	$obW.wrap.trace \
+	text	$obW.wrap.t
+
+after 1000 ChkButtons

@@ -1,0 +1,48 @@
+2011-03-30 Pierre Kestener <>
+	* Xsmurf version 2.4
+	- change FFTW2 to FFTW3
+
+2008-09-16  Pierre Kestener <>
+	* Xsmurf version 2.3.2.andre_beta
+	- integrate some custom routines/commands by André Khalil.
+
+2008-09-10  Pierre Kestener <>
+	* Xsmurf version 2.3.1:
+	- add the possibility to use the multi-threaded version of fftw2
+	- configure script has now a new option "--enable-fftw-threads" to
+	enable this feature.
+
+2008-04-06  Pierre Kestener  <>
+	* Xsmurf version 2.3:
+	- wtmm for 3d vector field in now integrated (see command wtmm3d with
+	  option -vector; see doc/examples/test_wtmm3d_vectorfield.tcl)
+	- documentation improved; tcldoc is used to generated a HTML
+	  documentation page about all the TCL-based commands defined in
+	  sub-directory tcl_library
+	- a TCL tutorial is included in doc/tutorial_tcl
+	- new command "conv2xsm" (see file tcl_libraryconvertImageToXsm.tcl)
+	  this command allows the user to load an image (TIFF, JPEG, PNM, PNG,
+	  BMP) directly into xsmurf (colored images are changed into gray-scale)
+	- use Nvidia GPU: in doc/template one can find a CUDA project that
+	  implements the 2D Canny Edge detector using graphics board resources.
+	  This implementation is about 8 to 10 times faster than the pure CPU
+	  fftw-based implementation. The scalar 2d template has been modified
+	  to allowing testing GPU computing.
+	- i3D_2_vtk has now a "-binary" option (generated file are much smaller)
+
+2007-??-?? Pierre Kestener <>
+	* Xsmurf version 2.2:
+
+
+2007-07-04  Pierre Kestener  <>
+
+        * Xsmurf version 2.1: defunc removed and replaced by GNU libmatheval.
+	Take care that the absolute value function symbol "fabs" is replaced
+	by "abs".
+
+2007-04-**  Pierre Kestener <>
+
+        * Xsmurf version 2.0: xsmurf now uses libtool's (aclocal, automake, etc).
+	See file bootstrap.sh
+	Xsmurf use FFTW library for computing WTMM edges of 2D/3D images (images
+	do not require anymore to have a power-of-2 size).

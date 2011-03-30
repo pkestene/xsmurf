@@ -1,0 +1,19 @@
+Here are some test script that go step by step through the
+computations of the WTMM "edges" for 2D/3D scalar/vector fields.
+
+Try to source one of the following script in xsmurf console:
+(see comments inside scripts for more informations).
+
+2D scalar data:
+test_wtmm2d_follow.tcl
+test_wtmm2d.tcl  
+
+2D vector field data:
+test_wtmm2d_vectorfield.tcl  
+
+3D scalar data:
+test_wtmm3d_brownian.tcl  
+test_wtmm3d.tcl
+
+3D vector field data
+test_wtmm3d_vectorfield.tcl

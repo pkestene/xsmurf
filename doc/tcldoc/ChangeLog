@@ -1,0 +1,25 @@
+2004-11-05  J. Tang  <tang@cavall.jtang.org>
+
+	* Added versioning and attempted to make generated HTML a bit more
+	W3C 3.2 compliant
+
+	* Instead of aborting on bad code skips it (thanks Ben Thomasson)
+
+	* Corrected trailing backslashes (thanks Mark Ewert)
+
+	* Corrected flattening of procedure arguments (thanks Uwe Koloska)
+
+2004-10-22  J. Tang  <tang@jtang.org>
+
+	* Updated tcldoc.html file to reflect changes below.
+
+	* Added Makefile.
+
+	* Changed --doc-files option to also allow invidual files.
+
+	* Changed calculation of first sentences to strip HTML tags.
+
+	* Maintain newlines within comment blocks, to facilitate <pre>
+	tags.
+	
+

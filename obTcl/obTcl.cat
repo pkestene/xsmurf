@@ -1,0 +1,396 @@
+
+
+
+obTcl(3)                                                 obTcl(3)
+
+
+_________________________________________________________________
+
+NNAAMMEE
+       obTcl - A pure-Tcl object oriented extension
+
+SSYYNNOOPPSSIISS
+       ccllaassss _c_l_a_s_s_N_a_m_e
+       _c_l_a_s_s_N_a_m_e iinnhheerriitt ?_c_l_a_s_s_N_a_m_e...?
+
+       _c_l_a_s_s_N_a_m_e mmeetthhoodd _m_e_t_h_o_d_N_a_m_e {{ _a_r_g_s }} {{
+          iinnssttvvaarr ?_v_a_r_N_a_m_e_s_._._.?
+          iiccllaassssvvaarr ?_v_a_r_N_a_m_e_s_._._.?
+          ccllaassssvvaarr ?_v_a_r_N_a_m_e_s_._._.?
+          gglloobbaall ?_v_a_r_N_a_m_e_s_._._.?
+          nneexxtt ?_a_r_g_s_._._.?
+          _T_c_l _s_t_a_t_e_m_e_n_t_s
+       }}
+
+       _c_l_a_s_s_N_a_m_e _m_e_t_h_o_d_N_a_m_e ?_a_r_g_s_._._.?
+
+       _c_l_a_s_s_N_a_m_e nneeww _o_b_j_e_c_t_N_a_m_e ?_o_p_t_i_o_n_s_._._.?
+       _c_l_a_s_s_N_a_m_e _w_i_d_g_e_t_O_b_j_e_c_t_N_a_m_e ?_o_p_t_i_o_n_s_._._.?
+
+       _o_b_j_N_a_m_e _m_e_t_h_o_d_N_a_m_e ?_a_r_g_s_._._.?
+
+       _o_b_j_N_a_m_e iinnffoo ?_a_r_g_s_._._.?
+       _o_b_j_N_a_m_e sseett _i_n_s_t_v_a_r_N_a_m_e ?_v_a_l_u_e?
+       _o_b_j_N_a_m_e eevvaall _s_c_r_i_p_t
+
+       _o_b_j_N_a_m_e ddeessttrrooyy
+       _w_i_d_g_e_t_O_b_j_e_c_t_N_a_m_e ddeessttrrooyy
+       ddeessttrrooyy _w_i_d_g_e_t_O_b_j_e_c_t_N_a_m_e
+_________________________________________________________________
+
+
+DDEESSCCRRIIPPTTIIOONN
+       oobbTTccll  is an object-oriented extension to Tcl, implemented
+       entirely in standard Tcl.  Much of the functionality  pro-
+       vided  is implemented in the Base class, and Widget class,
+       which are two standard classes that come with oobbTTccll.   The
+       definition  of  these classes, and their documentation can
+       be found in the file bbaassee..ttccll.
+
+       Most of the documentation  can  be  found  throughout  the
+       source files.  It can be conveniently read by starting the
+       ddeemmoo program.  If you do not have wish4.0, you  can  start
+       tclsh7.4,  source _o_b_t_c_l, and type _h_e_l_p to access the docu-
+       mentation.  Otherwise, using _l_e_s_s or  _m_o_r_e  and  searching
+       for  the word _D_O_C will work too.  I will here only explain
+       matters that are not covered in that documentation.
+
+
+CCLLAASSSS DDEEFFIINNIITTIIOONNSS
+       Classes are defined by  using  the  ccllaassss  keyword.   Each
+
+
+
+                                                                1
+
+
+
+
+
+obTcl(3)                                                 obTcl(3)
+
+
+       class  consists  of a class object (it is created when the
+       class is defined).  The class object functions as a repos-
+       itory  for class-wide data, and as a central for instanti-
+       ating objects.
+
+       Most methods are used from instantiated objects, but it is
+       also  possible  to  create  methods  which  are to be used
+       directly from the class object, here called _c_l_a_s_s _m_e_t_h_o_d_s.
+       Many class methods are actually defined in the Base class,
+       whereas some class methods are hard-coded into  the  class
+       object.
+
+       The  class  method  iinnhheerriitt  is used to define which other
+       classes to inherit from.  The _B_a_s_e  class  need  never  be
+       specified explicitly.  Using iinnhheerriitt without any arguments
+       returns the current inheritance list.  The specified order
+       of  inherited  classes  has  significance; the inheritance
+       list is searched from left to right during method  resolu-
+       tion.
+
+       The  class  method nneeww is used to instantiate new objects.
+       Objects whose name begin with a period (i.e. widgets)  can
+       be created without explicitly specifying the nneeww method.
+
+       The  class method mmeetthhoodd is used to define new methods for
+       the class.
+
+       Another commonly used class method is ooppttiioonn which is used
+       to  define  class wide option handlers. See the documenta-
+       tion on _c_l_a_s_s _B_a_s_e for more information about option  han-
+       dlers.
+
+
+OOBBJJEECCTT CCRREEAATTIIOONN
+       To instantiate an object, the class name is used, followed
+       by the method nneeww and the name of the object.  For objects
+       whose  names  begin  with  a  period, ".", nneeww need not be
+       specified.  Example:
+
+              Base new foo            ;# Create the simple object foo
+              Widget .bar -width 200  ;# Create the Widget object .bar
+
+
+       For each newly created object, the method iinniitt is automat-
+       ically  invoked.  If it does not exist, any inherited iinniitt
+       will be invoked.  iinniitt should normally be defined, and  it
+       should  normally  use  the  special function nneexxtt to allow
+       initialization of  any  super-classes  (see  INHERITANCE).
+       Sample definition:
+
+              class TwoButtons
+              TwoButtons inherit Widget
+
+              TwoButtons method init { args } {
+
+
+
+                                                                2
+
+
+
+
+
+obTcl(3)                                                 obTcl(3)
+
+
+                   next     ;# Get frame widget
+
+                   button $self.b1 -text "Button 1"
+                   button $self.b2 -text "Button 2"
+                   pack $self.b1 $self.b2 -in $self
+              }
+
+
+
+IINNHHEERRIITTAANNCCEE
+       All classes inherit methods from the BBaassee class.  In addi-
+       tion they inherit methods from classes specified with  the
+       iinnhheerriitt  class  method.  Multiple inheritance can be used.
+       Method lookup follows a depth-first tree  search,  so  all
+       methods  inherited  through  the first specified class are
+       searched, before searching the second inherited class, and
+       so  on.   Once a method is located, a cache-method is cre-
+       ated in the object's own class.  Thus, subsequent  invoca-
+       tions will be as fast as a normal method invocation.
+
+       Should  classes  be  redefined  in  any  way, the affected
+       cache-methods are automatically removed,  thus  forcing  a
+       new lookup.
+
+       The  special  function  nneexxtt  can be used to call the next
+       shadowed method.  nneexxtt can be used anywhere in the  method
+       body,  for  example  classes derived from the class _W_i_d_g_e_t
+       might want to call nneexxtt early on in the  _i_n_i_t  method,  to
+       get  the  frame  widget created.  Arguments passed to nneexxtt
+       are interpreted as if  they  were  passed  to  the  method
+       explicitly.   It  is valid to use nneexxtt even if no shadowed
+       method exists.  If several shadowed  methods  exist,  nneexxtt
+       will  call  them all, one after the other. nneexxtt also makes
+       sure that multiple inheritance paths to  the  same  method
+       does not result in multiple invocations of that method.
+
+       It  is  especially important to call nneexxtt from any ddeessttrrooyy
+       method.  In this case nneexxtt is normally called just  before
+       returning.   If  the  _B_a_s_e  class'  ddeessttrrooyy  method is not
+       invoked, some object data will not be freed.
+
+       The method uunnkknnoowwnn can be used to catch all invocations of
+       un-resolvable  methods.   uunnkknnoowwnn  is  only  invoked if no
+       matching method can be found  throughout  the  inheritance
+       tree.   The Base class defines uunnkknnoowwnn to produce an error
+       message, whereas the Widget class uses it to direct  meth-
+       ods  to the objects main widget.  An analogous approach is
+       used for unknown options.  See the documentation on  _c_l_a_s_s
+       _B_a_s_e and _c_l_a_s_s _W_i_d_g_e_t.
+
+
+MMEETTHHOODD EENNVVIIRROONNMMEENNTT
+       During  execution of a method, the following variables are
+       set:
+
+
+
+                                                                3
+
+
+
+
+
+obTcl(3)                                                 obTcl(3)
+
+
+       sseellff   The name of the object on whose behalf we are  exe-
+              cuting the method.
+
+       mmeetthhoodd The  name  of  the  method  that  we are executing.
+              Especially useful in the uunnkknnoowwnn  method,  to  find
+              out the name of the requested method.
+
+       iiccllaassss The name of the class of the object.
+
+       ccllaassss  The  name  of  the  class  in  which this method is
+              defined.
+
+       These variables should not be altered in  any  way,  since
+       obTcl relies on them for various things.
+
+
+MMEETTHHOODD IINNVVOOCCAATTIIOONN
+       Methods  are  invoked  by calling the object with a method
+       name as the first parameter.  Any parameters following the
+       method name are passed on to the method.  This follows the
+       style used in the Tk extension.
+
+       Example:
+
+               Widget .foo                ;# Create the object .foo
+               .foo configure -width 300  ;# Call method configure
+
+
+       Calling methods from within a method is normally  done  by
+       using $$sseellff.  Example:
+
+               $self openFile "/tmp/foo"
+
+
+       Within  method  definitions,  an alternative way to invoke
+       methods is available. Example:
+
+               $class::openFile "/tmp/foo"
+
+
+       where class can be either the variable $class, or  explic-
+       itly  specified.   This  method  is  faster than the first
+       method, but, as mentioned, can only be  used  from  within
+       the  methods of the class implementation.  It is only rec-
+       ommended for situations where speed is at premium, such as
+       in loops.
+
+
+SSTTOORRAAGGEE CCLLAASSSSEESS
+       oobbTTccll  adds  several new storage classes to Tcl.  They are
+       all implemented by the usage of _u_p_v_a_r to the global scope,
+       and  prefixing  the  variable  name  with class and object
+       information.   Once  _u_p_v_a_r:ed,  there  is  no  performance
+       penalty  (on  the  contrary,  using short iinnssttvvaarr names is
+
+
+
+                                                                4
+
+
+
+
+
+obTcl(3)                                                 obTcl(3)
+
+
+       probably often better than using  longer  global  variable
+       names, as one tends to do in traditional Tcl-programming).
+       Since Tcl handles multiple-step upvaring  gracefully,  and
+       upvaring  of  arrays  as  well,  these obTcl-variables are
+       totally transparent to the user.
+
+       Instance variables are declared with the iinnssttvvaarr  keyword.
+       Instance  variables  are  local  to the object, but can be
+       shared by all methods within the same object.
+
+       Class variables are shared amongst all objects of  a  spe-
+       cific   class.   Class  variables  come  in  two  flavors:
+       instance class scoped variables, declared with  iiccllaassssvvaarr,
+       and  definition  class  scoped  variables,  declared  with
+       ccllaassssvvaarr.  Instance class scoped  variables  take  on  the
+       calling object's class, thus allowing the same implementa-
+       tion being inherited by various classes, all of which will
+       have  a  different  set  of data.  Definition scoped class
+       variables, on the other hand, are tied to the  class  they
+       are  defined in, and all inheriting classes will share the
+       same class variables.
+
+       All access to  these  variables  requires  the  method  to
+       declare  the variables using iinnssttvvaarr, iiccllaassssvvaarr and ccllaassss--
+       vvaarr respectively.
+
+       Global variables are accessible as usual by declaring them
+       with gglloobbaall.
+
+       A note about iinnssttvvaarr:
+       Instvars  are  unique  to  the  class they are defined in.
+       This means that the instance variable ffoooo defined in class
+       AA is not connected to the instance variable ffoooo defined in
+       class BB.  The reason for this is  to  avoid  unintentional
+       clobbering  of data.  Some of the Base class methods over-
+       ride this protection by explicitly changing  their  $class
+       variable.   I  might  introduce a ppuubblliicc storage class, or
+       similar, to avoid this kludge.  The  problem  with  imple-
+       menting  such  a  storage class is that it cannot be effi-
+       ciently scoped to _o_n_l_y be accessible from derived classes,
+       but  _n_o_t  from  any  super-classes (as far as I can tell).
+       Alternatively one could have a function for bringing vari-
+       ables  from  specific  classes  into scope, but this would
+       make a class dependent upon the implementation details  of
+       its super-classes.  Any ideas, OO-old-timers?
+
+
+MMEEGGAA WWIIDDGGEETTSS
+       It  is  possible  to create classes of mega widgets, which
+       can be  used  transparently  together  with  ordinary  Tk-
+       widgets.   This is done by inheriting from the obTcl class
+       WWiiddggeett.
+
+       When creating objects from such classes, just  follow  the
+
+
+
+                                                                5
+
+
+
+
+
+obTcl(3)                                                 obTcl(3)
+
+
+       normal  Tk-naming  conventions  for Tk-widgets; i.e parent
+       objects must exist, all names start with a lower case let-
+       ter, and are separated by ".".
+
+
+       Note:  The  mega  widget object always uses a Tk-widget as
+              its top-level parent.  After it  has  created  this
+              widget  it  renames  it  to _$_s_e_l_f_-_c_m_d.  This is not
+              visible to users of the mega widget, but can be  an
+              issue within the implementation of the mega widget.
+              For example, when the mega widget itself  needs  to
+              manipulate  the Tk-widget, it must use the Tk name:
+              _$_s_e_l_f_-_c_m_d.
+       Examples:
+
+              class TwoButtons
+              TwoButtons inherit Widget
+
+              TwoButtons method init { args } {
+
+                   next     ;# Get frame widget
+
+                   # Call the configure command for the frame
+                   #
+                   eval ${self}-cmd configure $args
+
+                   button $self.b1 -text "Button 1"
+                   button $self.b2 -text "Button 2"
+                   pack $self.b1 $self.b2 -in $self
+              }
+
+              TwoButtons .twoB   ;# Create an instance
+              pack .twoB -in .   ;# Pack it
+
+
+
+BBUUGGSS
+       None known so far, apart from some  limits  in  the  Mega-
+       widgets  (for example, Tabs will probably not look nice on
+       monochrome displays).  In general, the  mega-widgets  pro-
+       vided  are mostly provided as examples (they should really
+       be more complete).  Also, as the version number indicates,
+       some needed functionality may be lacking from obTcl.
+
+
+AAUUTTHHOORR
+       Please direct comments, ideas, complaints, etc. to:
+
+              patrik@dynas.se
+
+
+       Patrik Floding
+       DynaSoft AB
+
+
+
+
+                                                                6
+
+

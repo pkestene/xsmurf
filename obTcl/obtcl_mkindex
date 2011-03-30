@@ -1,0 +1,9 @@
+#!/bin/sh
+# the next line restarts using tclsh7.4 \
+exec tclsh7.4 "$0" "$@"
+
+lappend auto_path [file dirname [info script]]
+foreach i "." {
+        obtcl_mkindex $i *.tcl
+}
+

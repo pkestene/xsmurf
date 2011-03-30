@@ -1,0 +1,239 @@
+DOC "README" {
+			    -------------
+			    --  obTcl  --
+			    -------------
+
+			        v0.56
+
+			       18/2/96
+
+
+Description
+-----------
+	`obTcl' is a pure-Tcl object- and Megawidget-extension.
+	No binary extensions are needed.
+
+	The system supports multiple inheritance and three new
+	storage classes.  Efficiency is obtained through method-
+	resolution caching.
+
+	The distribution comes with a demo which demonstrates some
+	useful mega-widgets; among others a Tab widget (a.k.a
+	Notebook widget), and a paned-window widget.  The demo also
+	contains a system for reading the obTcl documentation.
+
+	The mega-widget support allows creation of mega-widgets
+	which handle like ordinary Tk-widgets; i.e can be "packed",
+	"deleted", "placed" etc, intermixed with ordinary Tk-widgets.
+
+	obTcl provides instance variables and class variables. Two
+	types of class class variables are provided: definition-
+	class scoped, and instance-class scoped.
+
+	Pronunciation: `obTcl' sounds like "optical".
+
+!! NEWS !!
+----------
+    *	The entire obTcl package may now be fully auto-loaded.
+	Simply append the installation directory to `auto_path'
+	(see the Tcl manpages for how to auto-load packages).
+
+    *	A dynamically loadable performance booster is now included.
+	After it has been loaded, performance is radically increased
+	for certain common obTcl operations, such as declaring
+	variables and invoking methods.  It works with Tcl7.5/Tk4.1.
+	The booster will eventually be automatically loadable, with
+	version control and all, once I get time to fix it.
+
+    *	The PanedWindow widget has been improved to allow for
+	non auto-resizing sections.
+
+To try it out
+-------------
+	First unzip and untar the distribution file.
+	Then cd to "obTcl-*", and try one of:
+
+	./demo
+	wish ./demo
+
+Installation
+------------
+	The obTcl directory may be placed anywhere, and
+	appending its location to the `auto_path' variable
+	gives access to all obTcl's features.
+
+	If you want to use the binary booster library, you may
+	need to edit the Makefile (LD_SHARED and TCL_INCL).
+	The current Makefile was made for Linux.  After
+ 	editing Makefile use "make lib" to create the booster
+	library.  This library needs wish4.1 to load.
+	Once obtcl0.56.so has been created, try:
+
+		> wish4.1
+		% load ./obtcl0.56.so obtcl
+		% source demo
+
+	Load the library _before_ sourcing the rest of the tcl-code
+	(you don't have to, but all objects created before the module
+	is loaded will be slower)!
+	Please mail me any changes that were required to compile
+	the library on different platforms!
+
+	Autoloading of the binary booster library can be
+	handled, but it isn't at the moment.
+
+	obTcl can be run in separate interpreters in wish4.1.
+	A separate load-command may be issued in each interpreter
+	to enable the speed booster.
+
+Files
+-----
+		Demo:
+
+	demo	    - Starts a demo.  Requires wish4.0 or later.
+	wrap	    - Part of the demo.
+	docs	    - Part of the demo.
+	tabs	    - Part of the demo.
+	panedw	    - Part of the demo.
+
+		Object system:
+
+	obtcl.tcl   - Main file for object system (it sources the
+		      three files listed below).
+	inherit.tcl - Inheritance related code
+	base.tcl    - Definitions for the Base and Widget classes
+	utils.tcl   - Utilities. Debugger, simple help/doc
+		      system, etc.
+	obtcl.c     - Implements the performace booster library.
+	obtclN.NN.so
+		    - Created from obtcl.c ("make lib").
+		      Load into wish4.1 for performace boost. 
+
+		Mega widgets:
+
+	Tabs.tcl    - Also known as a notebook widget.
+	ScrText.tcl - Text with scrollbars and touched-up layout.
+	PanedW.tcl  - Paned window widget
+	Layout.tcl  - Experimental geometry manager.
+	TkManText.tcl
+		    - Widget for reading tkman formatted text.
+
+		Misc:
+
+	Makefile    - Makes crunched version of obTcl, etc.
+	tcl_cruncher/*
+		    - A package for stripping tcl files.
+	crunch_spec
+	skip.awk    - Used when creating a crunched obTcl.
+	test.tst    - Tests some aspects of obTcl.
+
+		Documentation
+
+	COPYRIGHT   - Describes conditions for usage.
+	README      - This file.
+	obTcl.*	    - Manual pages of various formatting.
+
+Plans
+-----
+	Proper manpages, or improved DOC system (which should
+	combine in-code readability with pretty-rendering in the
+	help system). Less sloppy Makefile.
+
+	More classes:  standard-look geometry managers,
+	focus/keyboard-traversal manager, file selector,
+	combo box, etc.
+
+	Automated regression testing.
+	General streamlining (of course).
+
+Why use a pure-Tcl OO-extension?
+--------------------------------
+	o  It does not require any binary modules, so it runs on a
+	   vanilla `wish' or `tclsh'.  One advantage of this is:
+	   no "warehouse" of extension modules for different systems
+	   is required (avoiding the usual re-porting of these after
+	   a change).  Shortly: if wish/tclsh runs, `obTcl' runs.
+
+	o  It can run in safe-Tcl
+
+	o  Having a small core with very powerful basic capabilities
+	   (wish), allows extensions to be expressed in terms of
+	   the core functionality.  This saves internet bandwidth,
+	   and allows safe execution of untrusted code, provided
+	   that the core is certified.  In comparison, each binary
+	   extension must be certified as safe separately.
+
+	o  Moving in this direction helps identifying a small set of
+	   useful additions to the core Tcl -additions which
+	   facilitates building higher-level Tcl-extensions
+	   efficiently.
+
+Availability
+------------
+	Primary location:  ftp://ftp.dynas.se/pub/tcl/obTcl.tar.gz
+
+Copyright
+---------
+	Copyright (C) 1995 DynaSoft AB.  The copyrights are very
+	similar to those of Tcl/Tk.  See the file COPYRIGHT for
+	copyright information.
+
+Author
+------
+	Please direct comments, ideas, complaints, etc. to:
+
+		patrik@dynas.se
+
+   	Patrik Floding
+   	DynaSoft AB
+
+NON SQUASHED BUGS
+-----------------
+	Tabs may not look nice on monochrome displays.
+	In general, the mega-widgets provided are mostly
+	provided as examples (they should really be more complete).
+	Also, as the version number indicates, some needed
+	functionality may be lacking from obTcl.
+
+	Below is a list of bugs that have been reported to me, but
+	I am unable to fix since I cannot reproduce the behaviour.
+	If you stumble on this bug and know your Tcl/Tk, feel free
+	to fix the problem and mail me a patch :-) (please state
+	for which version of obTcl the patch has been made).
+
+  001	The demo may generate random Kanji-text on wish'es which
+	has support for Kanji.
+  002	The paned-window handle is not properly managed on some
+	systems (under olwm?), thus generating error messages.
+  003	The demo failed to start the Tk "widget" demo.
+
+CHANGELOG
+---------
+  0.56	18/2/96
+	Added obtcl.tcl to tclIndex for full auto-load.
+	Added obtcl.c - A performance boosting loadable module.
+	Added script `obtcl_mkindex' to allow packages that
+	depend on obTcl to easily make their own index files.
+	Changed demo script to load tabs on demand - gives
+	quicker startup.
+	Alpha-state additions to the PanedWindow widget - allows
+	"static" panes (panes that don't resize automatically).
+
+  0.54	17/12/95
+	Moved some previously hard-coded methods into the Base class.
+	Added the prefix "ot" to (almost) all internally used procs.
+	Added a simple test script.
+	Beautified the demo's front page.
+
+  0.53	16/12/95
+	Added auto-load support for classes, similar to suggestion
+	from John Robert LoVerso <loverso@osf.org>.
+	Auto load is performed lazily; when inheritance resolution
+	requires it.  This is mainly to preserve the ability for
+	arbitrary class definition order (which can be useful in many
+	situations).
+	A non-lazy mode may be added later for better error catching.
+
+  0.52	5/12/95
+	The original public release.
+}

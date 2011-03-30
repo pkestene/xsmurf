@@ -1,0 +1,383 @@
+'\" Man page formatting taken from...
+'\" Copyright 1990 Regents of the University of California
+'\" Permission to use, copy, modify, and distribute this
+'\" documentation for any purpose and without fee is hereby
+'\" granted, provided that this notice appears in all copies.
+'\" The University of California makes no representations about
+'\" the suitability of this material for any purpose.  It is
+'\" provided "as is" without express or implied warranty.
+'\"
+.so man.macros
+'\"	# CS - begin display of code example
+.de CS
+.RS
+.nf
+\f(CB
+..
+'\"	# CE - end display of code example
+.de CE
+\fP
+.fi
+.RE
+..
+.HS "obTcl" tcl
+.BS
+.SH NAME
+obTcl \- A pure-Tcl object oriented extension
+.SH SYNOPSIS
+\fBclass \fIclassName\fR
+.br
+\fIclassName \fBinherit\fR ?\fIclassName\fR...?
+.sp 0.1i
+\fIclassName \fBmethod\fI methodName\fB {\fI\ args\ \fB} {
+.ti +0.3i
+\fBinstvar \fR?\fIvarNames...\fR?
+.ti +0.3i
+\fBiclassvar \fR?\fIvarNames...\fR?
+.ti +0.3i
+\fBclassvar \fR?\fIvarNames...\fR?
+.ti +0.3i
+\fBglobal \fR?\fIvarNames...\fR?
+.ti +0.3i
+\fBnext \fR?\fIargs...\fR?
+.ti +0.3i
+\fITcl statements\fR
+.br
+\fB}\fR
+.sp 0.1i
+\fIclassName \fImethodName\fR ?\fIargs\...\fR?
+.sp 0.1i
+\fIclassName \fBnew \fIobjName\fR ?\fIoptions\...\fR?
+.br
+\fIclassName \fIwidgetObjName\fR ?\fIoptions\...\fR?
+.sp 0.1i
+\fIobjName \fImethodName\fR ?\fIargs\...\fR?
+.sp 0.1i
+\fIobjName \fBinfo\fR ?\fIargs\...\fR?
+.br
+\fIobjName \fBset\fR \fIinstvarName\fR ?\fIvalue\fR?
+.br
+\fIobjName \fBeval\fR \fIscript\fR
+.sp 0.1i
+\fIobjName \fBdestroy\fR
+.br
+\fIwidgetObjName\fR \fBdestroy\fR
+.br
+\fBdestroy\fR \fIwidgetObjName\fR
+.BE
+
+.SH DESCRIPTION
+.PP
+\fBobTcl\fR is an object-oriented extension to Tcl, implemented entirely
+in standard Tcl.  Much of the functionality provided is implemented
+in the Base and Widget classes, which are two standard classes that
+come with \fBobTcl\fR.  The definition of these classes, and their
+documentation can be found in the file \fBbase.tcl\fR.
+.PP
+Most of the documentation can be found throughout the source files.
+It can be conveniently read by starting the \fBdemo\fR program.
+If you do not have wish4.0, you can start tclsh7.4, source
+\fIobtcl\fR, and type \fIhelp\fR to access the documentation.
+Otherwise, using \fIless\fR or \fImore\fR and searching for
+the word \fIDOC\fR will work too.
+I will here only explain matters that are not covered in that
+documentation.
+
+.SH CLASS DEFINITIONS
+Classes are defined by using the \fBclass\fR keyword.  Each class
+consists of a class object (it is created when the class is defined).
+Example:
+.CS
+class FileSelector
+.CE
+.PP
+The class object functions as a repository
+for class-wide data, and as a central for instantiating objects.
+.PP
+Most methods are used from instantiated objects, but it is also
+possible to create methods which are to be used directly from the class object,
+here called \fIclass methods\fR.
+Many class methods are actually defined in the
+Base class, whereas some class methods are hard-coded into the class object.
+.PP
+The class method \fBinherit\fR is used to define which other classes
+to inherit from.  The \fIBase\fR class need never be specified explicitly.
+Using \fBinherit\fR without any arguments returns the current inheritance
+list.  The specified order of inherited classes has significance; the
+inheritance list is searched from left to right during method resolution.
+Example:
+.CS
+class FileSelector
+FileSelector inherit Widget
+.CE
+.PP
+The class method \fBmethod\fR is used to define new methods for the class.
+Example:
+.CS
+FileSelector method getFile { {dir "."} } {
+	set files [exec ls $dir]
+	# More code needed..
+}
+.CE
+.PP
+Another commonly used class method is \fBoption\fR which is used to
+define class wide option handlers. See the documentation on \fIclass Base\fR
+for more information about option handlers.
+
+.SH OBJECT CREATION
+To instantiate an object, the class name is used, followed by the method
+\fBnew\fR and the name of the object.  For objects whose names begin with
+a period, ".", \fBnew\fR need not be specified.
+Example:
+.CS
+Base new foo            ;# Create the simple object foo
+Widget .bar -width 200  ;# Create the Widget object .bar
+.CE
+.PP
+For each newly created object, the method \fBinit\fR is automatically
+invoked.  If it does not exist, any inherited \fBinit\fR will be invoked.
+\fBinit\fR should normally be defined, and it should normally use the special
+function \fBnext\fR to allow initialization of any super-classes
+(see INHERITANCE).  Sample definition:
+.CS
+class TwoButtons
+TwoButtons inherit Widget
+
+TwoButtons method init { args } {
+
+	next     ;# Get frame widget
+
+	button $self.b1 -text "Button 1"
+	button $self.b2 -text "Button 2"
+	pack $self.b1 $self.b2 -in $self
+}
+.CE
+
+.SH INHERITANCE
+.PP
+All classes inherit methods from the \fBBase\fR class.  In addition they
+inherit methods from classes specified with the \fBinherit\fR class method.
+Multiple inheritance can be used.
+Method lookup follows a depth-first tree search, so all methods
+inherited through the first specified class are searched, before searching the
+second inherited class, and so on.
+Once a method is located, a cache-method is created in the object's own class.
+Thus, subsequent invocations will be as fast as a normal method invocation.
+.PP
+Should classes be redefined in any way, the affected cache-methods are
+automatically removed, thus forcing a new lookup.
+.PP
+The special function \fBnext\fR can be used to call the next
+shadowed method.  \fBnext\fR can be used anywhere in the method body.
+For example, classes derived from the class \fIWidget\fR
+might want to
+call \fBnext\fR early on in the \fIinit\fR method, to get the frame widget
+created.  Arguments passed to \fBnext\fR are interpreted as if they
+were passed to the method explicitly.  It is valid to use \fBnext\fR even
+if no shadowed method exists.  If several shadowed methods exist, \fBnext\fR
+will call them all, one after the other. \fBnext\fR also makes sure that multiple
+inheritance paths to the same method does not result in multiple invocations
+of that method.
+.PP
+It is especially important to call \fBnext\fR from any \fBdestroy\fR method.
+In this case \fBnext\fR should normally be called just before returning.  If
+the \fIBase\fR class' \fBdestroy\fR method is not invoked, some object data
+will not be freed.
+.PP
+The method \fBunknown\fR can be used to catch all invocations of un-resolvable
+methods.  \fBunknown\fR is only invoked if no matching method can be found
+throughout
+the inheritance tree.  The Base class defines \fBunknown\fR to produce
+an error message, whereas the Widget class uses it to direct methods
+to the objects main widget.  An analogous approach is used for unknown
+options.  See the documentation on \fIclass Base\fR and \fIclass Widget\fR.
+
+.SH METHOD ENVIRONMENT
+During execution of a method, the following variables are set:
+.TP
+\fBself\fR
+The name of the object on whose behalf we are executing the method.
+.TP
+\fBmethod\fR
+The name of the method that we are executing.  Especially useful
+in the \fBunknown\fR method, to find out the name of the requested
+method.
+.TP
+\fBiclass\fR
+The name of the class of the object.
+.TP
+\fBclass\fR
+The name of the class in which this method is defined.
+.PP
+These variables should not be altered in any way, since obTcl relies on
+them for various things.
+
+.SH METHOD INVOCATION
+Methods are invoked by calling the object with a method name as the
+first parameter.
+Any parameters following the method name are passed on to the method.
+This follows the style used in the Tk extension.
+.PP
+Example:
+.CS
+ Widget .foo                ;# Create the object .foo
+ .foo configure -width 300  ;# Call method configure
+.CE
+.PP
+Calling methods from within a method is done by using \fB$self\fR.
+Example:
+.CS
+ $self openFile "/tmp/foo"
+.CE
+.PP
+Within method definitions, an alternative way to invoke methods
+is available. Example:
+.CS
+ $class::openFile "/tmp/foo"
+.CE
+.PP
+where class can be either the variable $class, or explicitly specified.
+This method is faster than the first method, but, as mentioned, can only be
+used from within the methods of the class implementation.
+.TP
+Note:
+Using the \fI$self method\fR style of calling methods allows them to
+be virtual.
+Using the
+\fI$class::method\fR style disables lookup of virtual methods. See
+\fIVIRTUAL METHODS\fR below for more information.
+The \fIclass::method\fR style of method invokation can also be used
+to specify the wanted method
+in situations where methods inherited via multiple inheritance
+have conflicting names.  Again, note that this call syntax can only
+be used from \fIwithin\fR a method.
+
+.SH VIRTUAL METHODS
+When using the method invokation syntax \fI$self method\fR,
+method lookup starts from the class of the instance object,
+searching the iheritance tree until a method is found.  This means that
+methods are virtual by default.
+When this is undesirable, invoke the method using \fI$class::method\fR,
+as described above.  To invoke a virtual method using this syntax
+(i.e. for performance reasons) use the \fIiclass\fR variable:
+\fI$iclass::method\fR.
+.PP
+Here follows an example of using a virtual method:
+.CS
+class Low
+Low method foo {} {
+	$self high_life       ;# Call virtual method
+	$iclass::high_life    ;# Call virtual method
+	$class::high_life     ;# Calling `Low::high_life'
+}
+Low method high_life {} {
+
+	# If no method was defined, catch error here
+	#
+	error "Error: no `high_life' in class: $iclass"
+}
+
+class High
+High inherit Low
+
+High method high_life {} {
+	puts "High::high_life was called!"
+}
+.CE
+
+.SH STORAGE CLASSES
+\fBobTcl\fR adds several new storage classes to Tcl.  They are all
+implemented by the usage of \fIupvar\fR to the global scope, and
+prefixing the variable name with class and object information.
+Once \fIupvar\fR:ed, there is no performance penalty (on the contrary,
+using short \fBinstvar\fR names is probably often better than using
+longer global variable names, as one tends to do in traditional
+Tcl-programming).  Since Tcl handles multiple-step upvaring gracefully,
+and upvaring of arrays as well, these obTcl-variables are totally
+transparent to the user.
+.PP
+Instance variables are declared with the \fBinstvar\fR keyword.
+Instance variables are local to the object, but can be shared by all
+methods within the same object.
+.PP
+Class variables are shared amongst all objects of a specific class.
+Class variables come in two flavors:
+instance class scoped variables, declared with \fBiclassvar\fR, and
+definition class scoped variables, declared with \fBclassvar\fR.
+Instance class scoped variables take on the calling object's class,
+thus allowing the same implementation being inherited by various classes,
+all of which will have a different set of data.
+Definition scoped class variables, on the other hand, are tied to the class
+they are defined in, and all inheriting classes will share the same
+class variables.
+.PP
+All access to these variables requires the method to declare the variables
+using \fBinstvar\fR, \fBiclassvar\fR and \fBclassvar\fR respectively.
+.PP
+Global variables are accessible as usual by declaring them with \fBglobal\fR.
+.PP
+A note about \fBinstvar\fR:
+.br
+Instvars are unique to the class they are defined in.  This means that
+the instance variable \fBfoo\fR defined in class \fBA\fR is not
+connected to the instance variable \fBfoo\fR defined in class \fBB\fR.
+The reason for this is to avoid unintentional clobbering of data.
+Some of the Base class methods override this protection by explicitly
+changing their $class variable.  I might introduce a \fBpublic\fR
+storage class, or similar, to avoid this kludge.
+
+.SH MEGA WIDGETS
+It is possible to create classes of mega widgets, which can be used
+transparently together with ordinary Tk-widgets.
+This is done by inheriting from the obTcl class \fBWidget\fR.
+.PP
+When creating objects from such classes, just follow the normal Tk-naming
+conventions for Tk-widgets; i.e parent objects must exist, all names
+start with a lower case letter, and are separated by ".".
+.PP
+.TP
+Note:
+The mega widget object always uses a Tk-widget as its main widget.
+After it has created this widget it renames it to \fI$self-cmd\fR.
+This is not visible to users of the mega widget, but can be an issue within
+the implementation of the mega widget.  For example, when the mega widget
+itself needs to manipulate the Tk-widget, it must use the Tk name:
+\fI$self-cmd\fR.
+.RE
+.PP
+Example of referring to \fI$self-cmd\fR:
+.CS
+class TwoButtons
+TwoButtons inherit Widget
+
+TwoButtons method init { args } {
+
+	next     ;# Get frame widget
+
+	# Call the configure command for the frame
+	#
+	eval $self-cmd configure $args
+
+	button $self.b1 -text "Button 1"
+	button $self.b2 -text "Button 2"
+	pack $self.b1 $self.b2 -in $self
+}
+
+TwoButtons .twoB   ;# Create an instance
+pack .twoB -in .   ;# Pack it
+.CE
+
+.SH BUGS
+See the README file for non-squashed bugs.
+As the version number indicates, some needed functionality
+may be lacking.
+
+.SH AUTHOR
+Please direct comments, ideas, complaints, etc. to:
+.CS
+patrik@dynas.se
+.CE
+.PP
+Patrik Floding
+.br
+DynaSoft AB

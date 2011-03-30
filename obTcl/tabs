@@ -1,0 +1,66 @@
+
+class TabDemo
+TabDemo inherit Widget
+
+TabDemo option {-label} "Tabs" configure {
+	instvar tab
+	[$tab button $self] configure -text $label
+}
+
+TabDemo option {-tab} {}
+
+TabDemo method init args {
+	global demoRoot
+	instvar tab label
+
+	eval $self conf_verify $args
+	if ![string compare "" $tab] {
+		error "Specifying the -tab \"option\" is non-optional!"
+	}
+	next
+
+	#$tab manage [list $label $self {-padx 2 -pady 2}]
+
+	set bg grey80
+
+	Tab new $self.tabs -background $bg -tab_background lightgrey
+	pack $self.tabs -in $self -expand 1 -fill both
+	
+	frame $self.about_f -background $bg -relief groove -borderwidth 2
+	ScrolledText $self.about -wrap word -writable no -scrollbars {y}\
+		-autoy yes -textrelief flat -background $bg \
+		-borderwidth 0
+	$self.about insert end \
+{This demo demonstrates the Tab mega-widget.
+
+The tabs may display anything that a button can display, such\
+as an image, for example.
+
+The area behind the tabs can be given a separate color from the tabs themselves.
+
+The body of the tab (where this text is) can be managed automatically,\
+or you can request that a function is called\
+whenever the user clicks on any tab, which is handy for\
+catching errors in input forms etc, before leaving a tab\
+}
+	label $self.files -text "Some files perhaps?" -background $bg
+	label $self.teaQ -text "Fancy a cup of tea?" -background $bg
+
+	image create photo tea1 -file $demoRoot/images/teapot.ppm
+
+	pack $self.about -in $self.about_f -padx 10 -pady 10 -anchor center
+	$self.tabs manage [list "About" $self.about_f {-padx 10 -pady 10 \
+		-ipadx 5 -ipady 5}]
+	$self.tabs manage [list "Files" $self.files {-padx 5 -pady 5}]
+	set b [$self.tabs manage [list manage $self.teaQ {-padx 5 -pady 5}]]
+	$b configure -image tea1
+}
+
+TabDemo method destroy args {
+	instvar tab
+	#$tab unmanage $self
+	next
+}
+
+catch {destroy $obW.tabdemo}
+TabDemo $obW.tabdemo -tab $obW.tab

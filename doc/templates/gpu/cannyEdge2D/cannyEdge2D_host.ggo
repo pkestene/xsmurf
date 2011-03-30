@@ -1,0 +1,11 @@
+# Name of your program
+package "cannyEdge2D_host"       # don't use package if you're using automake
+# Version of your program
+version "1.0"                  # don't use version if you're using automake
+
+# Options
+option  "output"        o "Output filename prefix (maxima chains in Xsmurf file format)"      string     yes
+option  "input"            i "input data filename (xsmurf image format)"        string     yes
+option "blocksize"      b "number of threads per blocks" int optional
+option "octave"          s "number of octaves" int optional
+option "vox"               v "number of vox per octaves" int optional

@@ -1,0 +1,505 @@
+# eiChain.tcl --
+#
+#       This file implements the Tcl code for ...
+#
+#   Copyright 1999 Centre de Recherche Paul Pascal, Bordeaux, France.
+#   Written by Nicolas Decoster.
+#
+#  RCS : $Id: eiChain.tcl,v 1.4 1999/05/09 20:25:01 decoster Exp $
+#
+#   Modified by P. Kestener (add options -rm_lines_by_size, -isolated 
+#                            and -swap_bytes)
+
+package provide eiChain 0.0
+
+#package require extImage
+
+# chain --
+# usage: chain str float int int [... options ...]
+#
+#   Horizontal and vertical chain of a serie of ext images.
+#   Based on hsearch (mmto), ssm(3mto) and vchain or vchain2
+#   NB : vchain -> mlm_vert_chain_TclCmd_ in interpreter/wt2d_cmds.c
+#         mlm_vert_chain_TclCmd_ -> vert_chain in wt2d/Chain.c
+#
+#
+# Parameters:
+#   string - Base name of the ext images.
+#   float  - First scale.
+#   int    - Number of octaves.
+#   int    - Number of voices.
+#
+# Options:
+#   -filename string: Specify a different base name for the files that contains
+#       the ext images.
+#
+#   -procfilename string: Specify a different base name for the files that
+#       contains the ext images.
+#
+#   -firstsid int: First scale id to begin the chain.
+#
+#   -lastsid int: Last scale id to begin the chain.
+#
+#   -boxratio float: Used to change the size of the "searching box" for 
+#       vertical chain (see vchain command).
+#
+#   -keepup  [float] : threshold to apply to each ext image before 
+#       doing anything else. (old name of this option : -thresh)
+#
+#   -keeplow [float] : threshold ... but keep low modulus instead of great.
+#
+#   -rm_lines_by_size [d d] : use command rm_by_size command (see its own
+#        help message). This operation is done after keepup or keeplow
+#               
+#   -similitude float: See vchain command.
+#         float used in vchain -> mlm_vert_chain_TclCmd_ (interpreter/wt2d_cmds.c)
+#         -> vert_chain (wt2d/Chain.c)  !!!
+#         used to test ext->arg of to extrema that we're going to chain
+#         and also to test mod_ratio = up_ext->mod / do_ext->mod
+#         default value is 0.8 
+#
+#   -nomsg: Do not put any message during processing.
+#
+#   -ssmargs list: List of args to append to the ssm command.
+#         recall that ssm search the local maxima of each line of an ext image.
+#         ssm -> search_single_max_TclCmd_ (in interpreter/wt2d_cmds.c)
+#             -> search_single_max         (in wt2d/single_max.c)
+#
+#   -ecut list: Apply ecut command to each ext image. The list is append to the
+#      ecut command.
+#
+#   -isolated: Specify that the maxima are isolated (i.e. there is no contour
+#      lines). We don't need to do horizontal chain, we use \"-grhack\" option
+#      of eload, and we must use the vchain2 command. With this option the
+#      option \"-ssmargs\" has no effect.
+#
+#   -swap_bytes : swap bytes when reading data (usefull when working 
+#                 on ext-images created on another system: unix, PC-linux, ...)
+#
+#   -noload : assume that ext images are already loaded under the name 
+#             "total$base" (usefull when you want to do multiple chain 
+#             with large data for which the load step can be long)
+#
+#
+# Return value:
+#   None.
+
+proc chain {name aMin nO nV args} {
+
+    set fileName $name
+    set suffixe {}
+    set firstSid 0
+    set firstFileSid 0
+    set lastSid [expr { $nO*$nV }]
+    set lastFileSid [expr { $nO*$nV }]
+    set boxRatio 1
+    set thresh 0
+    set similitude 0.8
+    set isNomsg no
+    set ssmArgs {}
+    set isEcut no
+    set ecutArgs {}
+    set isProcfilename no
+    set isIsolated no
+    set isKeepUp no
+    set isKeepLow no
+    set isRmlinesbysize no
+    set isSwap no
+    set isNoload no
+
+    # Arguments analysis
+
+    while {[string match -* $args]} {
+	switch -exact -- [lindex $args 0] {
+	    -filename {
+		set fileName [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -suffixe {
+		set suffixe [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -procfilename {
+		set procfileName [lindex $args 1]
+		set isProcfilename yes
+		set args [lreplace $args 0 1]
+	    }
+	    -firstsid {
+		set firstSid [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -firstfilesid {
+		set firstFileSid [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -lastsid {
+		set lastSid [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -lastfilesid {
+		set lastFileSid [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -boxratio {
+		set boxRatio [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -keepup {
+		# old name of this option -thresh
+		set thresh [lindex $args 1]
+		set args [lreplace $args 0 1]
+		set isKeepUp yes
+	    }
+	    -keeplow {
+		set thresh [lindex $args 1]
+		set args [lreplace $args 0 1]
+		set isKeepLow yes
+	    }
+	    -rm_lines_by_size {
+		set length_min [lindex $args 1]
+		set length_max [lindex $args 2]
+		set args [lreplace $args 0 2]
+		set isRmlinesbysize yes
+	    }
+	    -similitude {
+		set similitude [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -nomsg {
+		set isNomsg yes
+		set args [lreplace $args 0 0]
+	    }
+	    -ssmargs {
+		set ssmArgs [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -ecut {
+		set isEcut yes
+		set ecutArgs [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -isolated {
+		set isIsolated yes
+		set args [lreplace $args 0 0]
+	    }
+	    -swap_bytes {
+		set isSwap yes
+		set args [lreplace $args 0 0]		
+	    }
+	    -noload {
+		set isNoload yes
+		set args [lreplace $args 0 0]		
+	    }
+	    default {
+		return -code error "unknown option \"[lindex $args 0]\""
+	    }
+	}
+    }
+
+    set scale_max [expr $aMin*pow(2,($nO-1)+($nV/double($nV)))]
+    set scale_max [expr $scale_max*(6/0.86)]
+
+    set memSid 0
+    set fileSid 0
+    for {set o 0} {$o < $nO} {incr o} {
+	for {set v 0} {$v < $nV} {incr v; incr memSid; incr fileSid} {
+	    if {$memSid < $firstSid || $memSid > $lastSid} {
+		continue
+	    }
+	    if {$fileSid < $firstFileSid || $fileSid > $lastFileSid } {
+		continue
+	    }
+
+	    set scale [expr $aMin*pow(2,$o+($v/double($nV)))]
+	    set scale [expr $scale*(6/0.86)]
+
+	    if {$isNomsg == "no"} {
+		dputs "  Octave $o - voice $v - scale $scale ( $memSid )"
+	    }
+
+	    set memSidF [format "%.3d" $memSid]
+	    set sidf $memSidF
+	    set fileSidF [format "%.3d" $fileSid]
+
+	    set prevMemSid [expr { $memSid - 1 }]
+	    set prevMemSidF [format "%.3d" $prevMemSid]
+
+	    set zeEi ${name}${memSidF}
+	    set zePrevEi ${name}${prevMemSidF}
+
+	    if {$isProcfilename == "no"} {
+		set zeFileName ${fileName}${fileSidF}
+	    } else {
+		set zeFileName [$procfileName ${name} ${memSid}]
+	    }
+
+	    if {$isNoload == "no"} {
+		if {$isIsolated == "no"} {
+		    if {$isSwap == "no"} {
+			eload ${zeFileName}${suffixe} $zeEi
+		    } else {
+			eload ${zeFileName}${suffixe} $zeEi -swap_bytes
+		    }
+		} else {
+		    if {$isSwap == "no"} {
+			eload ${zeFileName}${suffixe} $zeEi -grhack
+		    } else {
+			eload ${zeFileName}${suffixe} $zeEi -grhack -swap_bytes
+		    }
+		}
+		if {$isEcut == "yes"} {
+		    eval ecut $zeEi $zeEi $ecutArgs
+		}
+	    } else {
+		if {$isEcut == "yes"} {
+		    eval ecut total$zeEi $zeEi $ecutArgs
+		}
+	    }
+
+
+	    if {$isKeepUp == "yes"} {
+		ekeep $zeEi $zeEi $thresh
+	    } elseif {$isKeepLow == "yes"} {
+		ekeep $zeEi $zeEi $thresh -keeplow 
+	    }
+
+	    if {$isRmlinesbysize == "yes" & $memSid == 0} {
+		rm_by_size $zeEi -min ${length_min} -max ${length_max} -new $zeEi
+	    }
+
+	    if {$isIsolated == "no"} {
+		hsearch $zeEi
+		# ssm : search single max
+		eval ssm $zeEi $ssmArgs
+		set vchainCmdName vchain
+	    } else {
+		set vchainCmdName vchain2
+	    }
+
+	    set boxSize [expr int($boxRatio*log($scale)*2/log(2))]
+	    if {$prevMemSid == $firstSid} {
+		$vchainCmdName $zePrevEi $zeEi $boxSize $similitude -first
+	    } else {
+		if {$prevMemSid > $firstSid} {
+		    $vchainCmdName $zePrevEi $zeEi $boxSize $similitude
+		}
+	    }
+	}   
+    }
+    return
+}
+
+
+
+# chainn --
+# usage: chainn str float int int int int [... options ...]
+#
+#   Same as chain not for all scales but for scales beetween scale1 ans scale2.
+#   Horizontal and vertical chain of a serie of ext images.
+#   Be careful giving valid parameters for scale1 and scale2
+#
+# Parameters:
+#   string - Base name of the ext images.
+#   float  - First scale.
+#   int    - Total number of octaves.
+#   int    - Number of voices.
+#   int    - No scale1.
+#   int    - No scale2.
+#
+# Options:
+#   -filename string: Specify a different base name for the files that contains
+#       the ext images.
+#   -procfilename string: Specify a different base name for the files that contains
+#       the ext images.
+#   -firstsid int: First scale id to begin the chain.
+#   -lastsid int: Last scale id to begin the chain.
+#   -boxratio float: Used to change the size of the "searching box" for vertical
+#       chain (see vchain command).
+#   -thresh float: threshold to apply to each ext image before doing anything
+#       else.
+#   -similitude float: See vchain command.
+#   -nomsg: Do not put any message during processing.
+#   -ssmargs list: List of args to append to the ssm command.
+#   -ecut list: Apply ecut command to each ext image. The list is append to the
+#      ecut command.
+#   -isolated: Specify that the maxima are isolated (i.e. there is no contour
+#      lines). We don't need to do horizontal chain, we use \"-grhack\" option
+#      of eload, and we must use the vchain2 command. With this option the
+#      option \"-ssmargs\" has no effect.
+#
+# Return value:
+#   None.
+
+proc chainn {name aMin nO nV nscale1 nscale2 args} {
+
+    set fileName $name
+    set firstSid $nscale1
+    set firstFileSid $nscale1
+    set lastSid $nscale2
+    set lastFileSid $nscale2
+    set boxRatio 1
+    set thresh 0
+    set similitude 0.8
+    set isNomsg no
+    set ssmArgs {}
+    set isEcut no
+    set ecutArgs {}
+    set isProcfilename no
+    set isIsolated no
+
+    # Arguments analysis
+
+    while {[string match -* $args]} {
+	switch -exact -- [lindex $args 0] {
+	    -filename {
+		set fileName [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -procfilename {
+		set procfileName [lindex $args 1]
+		set isProcfilename yes
+		set args [lreplace $args 0 1]
+	    }
+	    -firstsid {
+		set firstSid [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -firstfilesid {
+		set firstFileSid [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -lastsid {
+		set lastSid [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -lastfilesid {
+		set lastFileSid [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -boxratio {
+		set boxRatio [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -thresh {
+		set thresh [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -similitude {
+		set similitude [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -nomsg {
+		set isNomsg yes
+		set args [lreplace $args 0 0]
+	    }
+	    -ssmargs {
+		set ssmArgs [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -ecut {
+		set isEcut yes
+		set ecutArgs [lindex $args 1]
+		set args [lreplace $args 0 1]
+	    }
+	    -isolated {
+		set isIsolated yes
+		set args [lreplace $args 0 0]
+	    }
+	    default {
+		return -code error "unknown option \"[lindex $args 0]\""
+	    }
+	}
+    }
+    
+
+    set o1 [expr int(floor($nscale1/$nV))]
+    set v1 [expr $nscale1-$o1*$nV]
+    set o2 [expr int(floor($nscale2/$nV))]
+    set v2 [expr $nscale1-$o2*$nV]
+    
+    if { $nscale1 > $nscale2 } {
+	return -code error "wrong scales : nscale1 must be <= to nscale2"
+    } elseif { $o1 > $nO } {
+	return -code error "wrong scales"
+    } elseif { $o2 > $nO } {
+	return -code error "wrong scales"
+    }
+
+    set scale_max [expr $aMin*pow(2,($nO-1)+($nV/double($nV)))]
+    set scale_max [expr $scale_max*(6/0.86)]
+    set scale1 [expr $aMin*pow(2,$o1+($v1/double($nV)))]
+    set scale1 [expr $scale1*(6/0.86)]
+    set scale2 [expr $aMin*pow(2,$o2+($v2/double($nV)))]
+    set scale2 [expr $scale2*(6/0.86)]
+
+    set memSid $nscale1
+    set fileSid $nscale1
+    for {set nscale $nscale1} {$nscale <= $nscale2} {incr nscale; incr memSid; incr fileSid} {
+	if {$memSid < $firstSid || $memSid > $lastSid} {
+		continue
+	}
+	
+	if {$fileSid < $firstFileSid || $fileSid > $lastFileSid } {
+		continue
+	}
+	
+	set o [expr int(floor($nscale/$nV))]
+	set v [expr $nscale-$o*$nV]
+	set scale [expr $aMin*pow(2,$o+($v/double($nV)))]
+	set scale [expr $scale*(6/0.86)]
+	
+	if {$isNomsg == "no"} {
+		dputs "  Octave $o - voice $v - scale $scale ( nscale $nscale )"
+	}
+	
+	set memSidF [format "%.3d" $memSid]
+	set sidf $memSidF
+	set fileSidF [format "%.3d" $fileSid]
+	
+	set prevMemSid [expr { $memSid - 1 }]
+	set prevMemSidF [format "%.3d" $prevMemSid]
+	
+	set zeEi ${name}${memSidF}
+	set zePrevEi ${name}${prevMemSidF}
+	
+	if {$isProcfilename == "no"} {
+	    set zeFileName ${fileName}${fileSidF}
+	} else {
+	    set zeFileName [$procfileName ${name} ${memSid}]
+	}
+	
+	if {$isIsolated == "no"} {
+	    eload ${zeFileName} $zeEi
+	} else {
+	    eload ${zeFileName} $zeEi -grhack
+	}
+	
+	if {$isEcut == "yes"} {
+	    eval ecut $zeEi $zeEi $ecutArgs
+	}
+	
+	if {$thresh > 0} {
+	    ekeep $zeEi $zeEi $thresh
+	}
+	
+	if {$isIsolated == "no"} {
+	    hsearch $zeEi
+	    eval ssm $zeEi $ssmArgs
+	    set vchainCmdName vchain
+	} else {
+	    set vchainCmdName vchain2
+	}
+	
+	set boxSize [expr int($boxRatio*log($scale)*2/log(2))]
+	
+	if {$prevMemSid == $firstSid} {
+	    $vchainCmdName $zePrevEi $zeEi $boxSize $similitude -first
+	} else {
+	    if {$prevMemSid > $firstSid} {
+		$vchainCmdName $zePrevEi $zeEi $boxSize $similitude
+	    }
+	}   
+    }
+    return
+}
+

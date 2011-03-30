@@ -1,0 +1,36 @@
+To run this example, xsmurf must be installed somewhere in your path.
+
+#####################
+To run in batch mode:
+#####################
+   nohup xsmurf -nodisplay scr_gaussian.tcl > logFile &
+or
+   nohup xsmurf -nodisplay scr_mexican.tcl > logFile &
+
+To run with interactive window:
+   xsmurf scr_gaussian.tcl &
+or
+   xsmurf scr_mexican.tcl &
+
+#################################
+To visualize partition functions:
+#################################
+launch xsmurf
+   ./xsmurf
+type the following command:
+   ist init -filename parameters_gaussian.tcl
+   source average_pf.tcl
+   ist average gaussian 0 3
+
+
+DATA: 3D Fractional Brownian field
+data are generated with the xsmurf command ibro3D
+inside the scr_gaussian.tcl script.
+
+more information about this command:
+   help ibro3D
+
+
+
+To clean this directory:
+rm -Rf bro* *.eps pf logFile* *~ __*

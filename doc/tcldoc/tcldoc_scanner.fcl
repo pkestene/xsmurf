@@ -1,0 +1,282 @@
+%{
+# $Id: tcldoc_scanner.fcl,v 1.2 2004/11/05 17:36:48 tang Exp $
+
+#//#
+# Handles scanning of file-level and procedure-level comments.
+# Identifies the various tags (<code>@author</code>,
+# <code>@return</code>, etc) and formats them suitably for the file's
+# annotation page.  Also identifies one-line summary for the item and
+# adds it to the global summary table.  This file is parsed by {@link
+# http://mini.net/tcl/fickle fickle} to create the actual scanner.
+#
+# @author Jason Tang (tang@jtang.org)
+# @version 1.0
+#//#
+%}
+
+%option stack nodefault
+
+%x LINK
+%x SEE_S SEE_A SEE_L
+
+%%
+
+@author\s+        append ::annotrec(author) "\n<dd>"; set ::tag author
+@deprecated\s+    set ::annotrec(deprecated) ""; set ::tag deprecated
+@param\s+\S+\s+   { regexp -- {\A@param\s+(\S+)\s+} $yytext foo param_name
+                    append ::annotrec(param) "\n<dd><code>$param_name</code> - "
+                    set ::tag param
+                  }
+@return\s+        set ::annotrec(return) ""; set ::tag return
+@see\s+\"         append ::annotrec(see) "<dd>&quot;"; set ::tag see; yy_push_state SEE_S
+@see\s+\<         append ::annotrec(see) "<dd><"; set ::tag see; yy_push_state SEE_A
+@see\s+           append ::annotrec(see) "<dd>"; set ::tag see; yy_push_state SEE_L
+@since\s+         append ::annotrec(since) "\n<dd>"; set ::tag since
+@version\s+       append ::annotrec(version) "\n<dd>"; set ::tag version
+<*>\{@docroot\}   append ::annotrec($::tag) $::annotrec(docroot)
+<*>\{\s*@link\s+  yy_push_state LINK
+
+<SEE_S>\"         append ::annotrec(see) "&quot;"; set ::tag text; yy_pop_state
+<SEE_A></a>       append ::annotrec(see) "</a>"; set ::tag text; yy_pop_state
+<SEE_L>\S+(\s+\S+)?  interp_link $yytext see; set ::tag text; yy_pop_state
+
+<LINK>[^\}]+\}    interp_link [string range $yytext 0 end-1] link; yy_pop_state
+
+[^@\{]*           |
+<*>.|\n           append ::annotrec($::tag) $yytext
+
+%%
+
+# Flushes internal tables in preparation for writing a new annotation
+# file.  This function must be called before using any other procedure
+# within this file.
+#
+# @param dest I/O channel to write annotations
+# @param basename name of source Tcl file being annotate
+# @param annothtmlname name of file to where annotations are being
+# written
+# @param docroot documents root directory
+proc new_annotation {dest basename annothtmlname docroot} {
+    array unset ::annotfile
+    set ::annotfile(dest) $dest
+    set ::annotfile(basename) $basename
+    set ::annotfile(annothtmlname) $annothtmlname
+    set ::annotfile(docroot) $docroot
+    array set ::annotfile {file_overview {} file_summary {} procs {}}
+}
+
+# Given the file-level comment (with <code>//#</code> markings
+# removed) scans it for tags.  Generates the HTML code suitable for
+# writing to the file's annotation page.  Adds a one-line summary for
+# the file to the global summary table.
+#
+# @param header a contiguous block of comments sans hash marks
+proc add_file_annotation {header} {
+    YY_FLUSH_BUFFER
+    yy_scan_string $header
+    array unset ::annotrec
+    set ::annotrec(text) ""
+    set ::annotrec(docroot) $::annotfile(docroot)
+    set ::annotrec(basename) $::annotfile(basename)
+    set ::tag text
+    yylex
+    if {[yy_top_state] != "INITIAL"} {
+        tcldoc_file_error "Tag not closed in file header"
+    }
+
+    set ::annotrec(text) [string trim $::annotrec(text)]
+    set file_overview "<dl>\n"
+    
+    # calculate the file summary
+    if [info exists ::annotrec(deprecated)] {
+        set summary "<strong>Deprecated.</strong> <em>$::annotrec(deprecated)</em>\n"
+        append file_overview "<dt><strong>Deprecated.</strong> <em>[string trim $::annotrec(deprecated)</em>]\n<dl>\n"
+    } else {
+        set summary [get_summary $::annotrec(text)]
+        append file_overview "<dd>$::annotrec(text)\n<dl>\n"
+        if [info exists ::annotrec(since)] {
+            append file_overview "<dt><strong>Since:</strong><dd> [string trim $::annotrec(since)]\n"
+        }
+        if [info exists ::annotrec(version)] {
+            append file_overview "<dt><strong>Version:</strong> [string trim $::annotrec(version)]\n"
+        }        
+    }
+    if [info exists ::annotrec(author)] {
+        append file_overview "<dt><strong>Author:</strong> [string trim $::annotrec(author)]\n"
+    }
+    if [info exists ::annotrec(see)] {
+        append file_overview "<dt><strong>See Also:</strong> [string trim $::annotrec(see)]\n"
+    }
+    
+    append file_overview "</dl></dl>\n<hr>\n"
+    
+    set ::annotfile(file_overview) $file_overview
+    set ::annotfile(file_summary) $summary
+}
+
+# Given a procedure-level comment scans it for tags.  Generates the
+# HTML code suitable for writing to the file's annotation page.  Adds
+# a one-line summary for the procedure to the global summary table.
+#
+# @param header a contiguous block of comments sans hash marks
+# @param procname name of the procedure being scanned
+# @param procargs a {@link #flatten_args flattened} list of arguments
+# to the procedure
+# @param procline line number for procedure declaration within its
+# source file
+proc add_proc_annotation {header procname procargs procline} {
+    YY_FLUSH_BUFFER
+    yy_scan_string $header
+    array unset ::annotrec
+    set ::annotrec(text) ""
+    set ::annotrec(docroot) $::annotfile(docroot)
+    set ::annotrec(basename) $::annotfile(basename)
+    set ::tag text
+    yylex
+    if {[yy_top_state] != "INITIAL"} {
+        tcldoc_file_error "Tag not closed in procedure header"
+    }
+    
+    set ::annotrec(text) [string trim $::annotrec(text)]
+    set proc_detail "<h3><a name=\"$procname\">$procname</a></h3>
+<pre>proc $procname \{ $procargs \}</pre>
+<dl>\n"
+
+    # calculate the procedure summary
+    if [info exists ::annotrec(deprecated)] {
+        set summary "<strong>Deprecated.</strong> <em>[string trim $::annotrec(deprecated)]</em>\n"
+        append proc_detail "<dt><strong>Deprecated.</strong> <em>[string trim $::annotrec(deprecated)]</em>\n"
+    } else {
+        set summary [get_summary $::annotrec(text)]
+        append proc_detail "<dd>$::annotrec(text)<dl>\n"
+        if [info exists ::annotrec(param)] {
+            append proc_detail "<dt><strong>Parameters:</strong>\n[string trim $::annotrec(param)]\n"
+        }
+        if [info exists ::annotrec(return)] {
+            append proc_detail "<dt><strong>Returns:</strong>\n<dd> [string trim $::annotrec(return)]\n"
+        }
+        if [info exists ::annotrec(since)] {
+            append proc_detail "<dt><strong>Since:</strong>\n<dd> [string trim $::annotrec(since)]\n"
+        }
+        if [info exists ::annotrec(version)] {
+            append proc_detail "<dt><strong>Version:</strong> [string trim $::annotrec(version)]\n"
+        }
+    }
+ 
+    set proc_summary "<code><a href=\"#$procname\">$procname</a> \{ $procargs \}</code><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$summary"
+
+    if [info exists ::annotrec(author)] {
+        append proc_detail "<dt><strong>Author:</strong>\n[strin trim $::annotrec(author)]\n"
+    }
+    if [info exists ::annotrec(see)] {
+        append proc_detail "<dt><strong>See Also:</strong>\n[string trim $::annotrec(see)]\n"
+    }
+
+    set htmlname $::annotfile(basename).html
+    set procid ${procname}_${procline}
+    append proc_detail "<dt><strong>Defined in:</strong><dd><a href=\"$htmlname#$procid\">$::annotfile(basename), line $procline</a>
+</dl></dl>\n"
+
+    # summary entries are:  target, args, source, description, type
+    add_summary $procname \
+        "$::annotfile(annothtmlname)#$procname" "\{ $procargs \}" \
+        "$::annotfile(basename)"                $summary \
+        "proc"
+    set ::annotfile($procname:s) $proc_summary
+    set ::annotfile($procname:d) $proc_detail
+    lappend ::annotfile(procs) $procname
+}
+
+# Helper function to the scanner that takes the arguments to a
+# <code>@link</code> or the third form of <code>@see</code> and splits
+# it into its component parts.  For the name portion attempts to
+# resolve the procedure name as per the rules described in the {@link
+# tcldoc.html Tcldoc manual}.  Checks if there is an optional label;
+# if not then set the label equal to the name.  Finally adds the
+# results of the interpretation to the current tag being scanned.
+#
+# @param text tag text to scan
+# @param tag name of tag being scanned.
+proc interp_link {text tag} {
+    # first extract the name and optional label
+    if {[regexp -- {\A(\S+)\s*(.*)} $text foo name label] == 0} {
+        tcldoc_file_error "Malformed @${tag} tag"
+    }
+    if {$label == ""} {
+        set label [sanitize $name]
+    }
+    set text "<a href=\""
+    # try to split the name into a filename and procedure name
+    set filename ""
+    if {[string first "\#" $name] == -1} {
+        set procname $name
+    } else {
+        foreach {filename procname} [split $name "\#"] {}
+    }
+    if {$filename == ""} {
+        set filename $::annotrec(basename)
+    }
+    set procrecord [lookup_procrecord $procname $filename]
+    if {$procrecord != {}} {
+        foreach {procdest procline} $procrecord {}
+        append text "${procdest}-annot.html\#$procname"
+    } else {
+        append text $name
+    }
+    append text "\">$label</a>"
+    append ::annotrec($::tag) $text
+}
+
+# Actually writes the annotation file to disk at the location
+# specified in a previous call to {@link new_annotation}.  If
+# <code>new_annotation</code> has not been called yet then behavior is
+# undetermined.
+#
+# @see new_annotation
+proc write_annotation {} {
+    # write the file overview
+    puts $::annotfile(dest) "$::annotfile(file_overview)"
+    
+    # write the procedure summary
+    set procnames [lsort -dictionary $::annotfile(procs)]
+    puts $::annotfile(dest) "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\" width=\"100%\">
+<tr bgcolor=\"$::table_bg_color\">
+<!-- -------------------- PROCEDURE SUMMARY -------------------- -->
+<td><font size=\"+2\"><strong><a name=\"proc_summary\">Procedure Summary</a></strong></font></td>
+</tr>"
+    foreach procname $procnames {
+        puts $::annotfile(dest) "<tr><td>$::annotfile($procname:s)</td></tr>"
+    }
+    puts $::annotfile(dest) "</table>\n<p>"
+
+    # write actual procedure details
+    puts $::annotfile(dest) "<!-- -------------------- PROCEDURE DETAIL -------------------- -->
+<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\" width=\"100%\">
+<tr bgcolor=\"$::table_bg_color\">
+<td colspan=1><font size=\"+2\"><strong><a name=\"proc_detail\">Procedure Detail</a></strong></font></td>
+</tr>
+</table>"
+    foreach procname [lrange $procnames 0 end-1] {
+        puts $::annotfile(dest) "$::annotfile($procname:d)\n<hr>"
+    }
+    if [llength $procnames] {
+        puts $::annotfile(dest) "$::annotfile([lindex $procnames end]:d)"
+    }
+}
+
+
+# Determines the summary line given the file/procedure information.  A
+# summary is the first sentence (text ending with a period and followed
+# by whitespace), excluding all HTML tags.
+#
+# @param text Text from a comment block (either file or procedure
+# level) from which to determine summary.
+# @return Calculated summary.
+proc get_summary {text} {
+    regsub -all {<[^>]*>} $text {} text
+    if {[regexp -- {\A([^\.]*.)(\s|\n)} $text foo summary] == 0} {
+        set summary $text
+    }
+    return [string trim $summary]
+}

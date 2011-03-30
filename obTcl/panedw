@@ -1,0 +1,110 @@
+
+class PWDemo
+PWDemo inherit Widget
+
+PWDemo option {-label} "Paned Window" configure {
+	instvar tab action
+	[$tab button $self] configure -text $label
+}
+
+PWDemo option {-tab} {}
+
+PWDemo method init args {
+	instvar tab label
+
+	eval $self conf_verify $args
+	if ![string compare "" $tab] {
+		error "Specifying the -tab \"option\" is non-optional!"
+	}
+	next
+
+	$self complete
+}
+
+PWDemo method complete {} {
+	instvar tab label
+
+	PanedWindow $self.pw1 -orientation x -min .1 -fraction ".5"
+	PanedWindow $self.pw2 -orientation x -min .1 -fraction ".5"
+	PanedWindow $self.pw3 -orientation y -min .1 -fraction ".8" \
+		-resize {d s}
+
+	ScrolledText $self.st1 -writable no -background grey80
+	ScrolledText $self.st2 -writable no -background grey80
+	ScrolledText $self.st3 -writable yes -background grey80 \
+		-scrollbars y -autoy yes
+	ScrolledText $self.st4 -writable no -background grey80 \
+		-scrollbars y -autoy yes
+
+	$self initTexts
+
+	$self.pw1 manage $self.st1 $self.st2
+	$self.pw2 manage $self.st3 $self.st4
+	$self.pw3 manage $self.pw1 $self.pw2
+	pack $self.pw3 -expand 1 -fill both
+}
+
+PWDemo method destroy args {
+	instvar tab
+	#$tab unmanage $self
+	next
+}
+
+PWDemo method initTexts {} {
+	global demoRoot obW tk_library
+	instvar label tab
+
+	$self.st1 insert end \
+{----------------------------------------------------------------------
+This demo demonstrates the PanedWindow geometry manager.
+A PanedWindow is a mega-widget which manages other windows,
+It can be handled like any other Tk-widget, i.e it can be packed,
+destroyed, etc.
+
+Internally it uses the packer and the placer to manage its windows.
+
+The windows it manages does not have to be children of the manager
+-the restrictions are the same as for using `pack' or `place'.
+
+This demo uses three paned windows:  one for the two upper text windows,
+one for the two lower text windows, and one to manage those two paned
+windows (resulting in the horizontal sash).
+
+Each paned window can manage any number of windows, stacked either
+horizontally or vertically.  Initial proportions can be specified, and
+the current settings queried.  And, of course, Paned Window is not
+restricted to managing text windows (I just couldn't think of anything
+else for this demo :-).
+
+It is possible to dynamically alter how many, and which windows are
+managed (although this demo doesn't explore this).
+
+See "class PanedWindow" under Documentation for more information.
+----------------------------------------------------------------------
+	
+	}
+	$self.st2 insert end \
+"------------------------------------------------------------------
+Here follows the Tcl-code for this demo.  As you can see, the demo
+itself is built as an object.  It unmanages itself from the main
+Tab-bar upon destruction.
+------------------------------------------------------------------
+
+[exec cat $demoRoot/panedw]"
+
+	$self.st3 insert end \
+"You can type in this window"
+
+	$self.st4 insert end \
+"Some variables and their current values:
+
+	\$self		= $self
+	\$obW		= $obW
+	\$label		= $label
+	\$tab		= $tab
+	\$demoRoot	= $demoRoot
+	\$tk_library 	= $tk_library"
+}
+
+catch {destroy $obW.panedW}
+PWDemo $obW.panedW -tab $obW.tab
