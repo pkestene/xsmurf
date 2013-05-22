@@ -29,6 +29,12 @@
 #include <string.h>
 #include <assert.h>
 
+// for HDF5 file format reading
+#ifdef USE_HDF5
+#include <hdf5.h>
+#endif // USE_HDF5
+
+
 /*void store_image (char  *name, Image *image_ptr);
   void store_signal_in_dictionary (char   *name, Signal *signal_ptr);
 */
@@ -5916,6 +5922,59 @@ ImaFileLoadCmd_(ClientData clientData,
   
   return TCL_OK;
 }
+
+/**************************************
+ * Command name in xsmurf : iloadHdf5
+ **************************************/
+/*------------------------------------------------------------------------
+  ImaFileLoadHdf5Cmd_
+  ----------------------------------------------------------------------*/
+int
+ImaFileLoadHdf5Cmd_(ClientData clientData,
+		    Tcl_Interp *interp,
+		    int argc,
+		    char **argv)      
+{ 
+  char * options[] = { "ss[s]",
+		       NULL};
+
+  char * help_msg =
+    {("Read a HDF5 file (variable=fieldname) and put it in an image named after fieldname by default or optional 3rd parameter\n"
+      "\n"
+      "\n")};
+
+#ifdef USE_HDF5
+
+  char  * imageFilename = NULL;
+  char  * fieldName     = NULL; 
+  char  * imageName     = NULL; 
+  
+  int     lx, ly, lz;
+  int     i, j, k, size;
+
+  Image * image = NULL;
+  real  * data;
+
+  if (arg_init(interp, argc, argv, options, help_msg))
+    return TCL_OK;
+
+  if (arg_get(0, &imageFilename, &fieldName, &imageName) == TCL_ERROR)
+    return TCL_ERROR;
+  
+  if (!imageName)
+    imageName = fieldName;
+
+
+#else
+  
+  Tcl_AppendResult (interp, "Xsmurf was not build with HDF5 support...\n", (char *) NULL);
+  Tcl_AppendResult (interp, "Try rebuild xsmurf with HDF5 enabled.\n", (char *) NULL);
+
+#endif // USE_HDF5
+
+  return TCL_OK;
+}
+
 
 /************************************
  * Command name in xsmurf : i3Dload

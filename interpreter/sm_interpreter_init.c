@@ -320,6 +320,7 @@ static cmd_info image_cmds[] = {
 
   {"isave",      (Tcl_CmdProc *) ImaFileSaveCmd_},
   {"iload",      (Tcl_CmdProc *) ImaFileLoadCmd_},
+  {"iloadHdf5",  (Tcl_CmdProc *) ImaFileLoadHdf5Cmd_},
   {"i3Dload",    (Tcl_CmdProc *) Ima3DFileLoadCmd_},
   {"i3Dsave",    (Tcl_CmdProc *) Ima3DSaveFileCmd_},
 

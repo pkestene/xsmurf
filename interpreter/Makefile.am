@@ -1,4 +1,11 @@
-AM_CFLAGS =  @CFLAGS@ @MEM_DEBUG_FLAGS@ @LOG_MESSAGES_FLAGS@ @TK_INCLUDES@ @TCL_INCLUDES@ -I. -I$(top_srcdir)/cv1d -I$(top_srcdir)/cv2d -I$(top_srcdir)/gfft -I$(top_srcdir)/spline -I$(top_srcdir)/wt2d -I$(top_srcdir)/dyadique -I$(top_srcdir)/edge @CV1D_FFT_INC@ @JPEG_INC@ @MATHEVAL_INC@
+# HDF5 flags
+if HAVE_HDF5
+HDF5_CPPFLAGS += -DUSE_HDF5 -DH5_NO_DEPRECATED_SYMBOLS 
+endif
+
+AM_CFLAGS =  @CFLAGS@ @MEM_DEBUG_FLAGS@ @LOG_MESSAGES_FLAGS@ @TK_INCLUDES@ @TCL_INCLUDES@ -I. -I$(top_srcdir)/cv1d -I$(top_srcdir)/cv2d -I$(top_srcdir)/gfft -I$(top_srcdir)/spline -I$(top_srcdir)/wt2d -I$(top_srcdir)/dyadique -I$(top_srcdir)/edge @CV1D_FFT_INC@ @JPEG_INC@ @MATHEVAL_INC@ $(HDF5_CPPFLAGS)
+
+
 
 noinst_LTLIBRARIES=libinterpreter.la
 

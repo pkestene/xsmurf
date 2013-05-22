@@ -230,6 +230,7 @@ int im_fftw3d_real_TclCmd_ (ClientData,Tcl_Interp*,int,char**);
 
 int ImaFileSaveCmd_ (ClientData,Tcl_Interp*,int,char**);
 int ImaFileLoadCmd_ (ClientData,Tcl_Interp*,int,char**);
+int ImaFileLoadHdf5Cmd_ (ClientData,Tcl_Interp*,int,char**);
 int Ima3DFileLoadCmd_ (ClientData,Tcl_Interp*,int,char**);
 int Ima3DSaveFileCmd_ (ClientData,Tcl_Interp*,int,char**);
 

@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Package setup
 # ------------------------------------------------------------------------------
-AC_INIT([xsmurf],[2.4.0], [pierre.kestener@cea.fr])
+AC_INIT([xsmurf],[2.4.1], [pierre.kestener@cea.fr])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability])
 AC_CANONICAL_HOST
@@ -405,6 +405,13 @@ fi
 CONFIGURE_HEADLINE([ JPEG lib support ])
 AC_JPEG_STATUS
 
+# ------------------------------------------------------------------------------
+#    Check for lib Hdf5
+# ------------------------------------------------------------------------------
+CONFIGURE_HEADLINE([ HDF5 support ])
+AX_LIB_HDF5()
+AM_CONDITIONAL(HAVE_HDF5, test "$with_hdf5" = "yes")
+AM_CONDITIONAL(HAVE_HDF5_PARALLEL, test "$HDF5_PARALLEL_ENABLED" = "yes")
 
 #######################################################
 #######################################################
@@ -485,4 +492,5 @@ AC_MSG_RESULT([
 	* TK  version		 : $TK_VERSION
 	* FFTW3 single precision : $is_fftw_ok
 	* FFTW3 threads		 : $fftw_threads_ok
+	* HDF5 enabled           : $with_hdf5 ($HDF5_VERSION)
 ])
