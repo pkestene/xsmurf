@@ -13,6 +13,15 @@ proc setIfNew { var val } {
 	}
 }
 
+proc setIfNewArray { var val } {
+    global $var
+    if ![info exists $var] {
+	array set $var {
+	    nothing $val
+	}
+    }
+}
+
 proc crunch_skip args {}
 
 crunch_skip begin

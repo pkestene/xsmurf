@@ -261,7 +261,8 @@ proc otFreeObj obj {
 	catch {rename $obj {}}
 }
 
-setIfNew _obTcl_Classes() ""
+#setIfNew _obTcl_Classes() ""
+setIfNewArray _obTcl_Classes ""
 setIfNew _obTcl_NoClasses 0
 
 # This new class proc allows overriding of the 'new' method.

@@ -94,7 +94,8 @@ proc otResolve { class func } {
 #	name).
 #
 
-setIfNew _obTcl_unknBarred() ""
+#setIfNew _obTcl_unknBarred() ""
+setIfNewArray _obTcl_unknBarred ""
 
 proc unknown args {
 	global _obTcl_unknBarred
