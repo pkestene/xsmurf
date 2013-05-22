@@ -1,0 +1,206 @@
+#!/bin/sh
+# the next line restarts using wish \
+exec wish "$0" "$@"
+
+set demoRoot [file dirname [info script]]
+lappend auto_path $demoRoot
+
+#----------------------------------------------------------------------
+# Fix the background color of the highlight rectangle.
+#----------------------------------------------------------------------
+
+set bg [option get . background Button]
+if ![string compare "" $bg] {
+	set bg lightgray
+}
+option add *highlightBackground $bg userDefault
+
+#----------------------------------------------------------------------
+# Wrap `destroy' to be able to trap destruction from the `widget' demo
+#----------------------------------------------------------------------
+
+# StopList is used in demo_destroy to stop
+# deletion of certain windows
+
+set StopList(obtclDemo) 1
+set StopList() 1
+
+proc demo_destroy args {
+	global StopList
+	foreach i $args {
+		set base [lindex [split $i "."] 1]
+		if ![info exists StopList($base)] {
+			true_destroy $i
+		}
+	}
+}
+
+proc StopOn {} {
+	if ![string compare "" [info commands true_destroy]] {
+		rename destroy true_destroy
+		rename demo_destroy destroy
+	}
+}
+proc StopOff {} {
+	if [string compare "" [info commands true_destroy]] {
+		rename destroy demo_destroy
+		rename true_destroy destroy
+	}
+}
+
+#----------------------------------------------------------------------
+# Wrap `exit' so exiting the `widget' demo does not terminate this demo.
+#----------------------------------------------------------------------
+
+proc demo_exit args {
+	StopOn
+	eval destroy [winfo children .]
+	StopOff
+	wm withdraw .
+}
+
+if ![string compare "" [info procs exit]] {
+	rename exit true_exit
+	rename demo_exit exit
+}
+
+
+# Use "." for `widget' demo
+
+wm withdraw .
+
+proc WidgetDemo {} {
+	uplevel #0 {
+	StopOn
+	source $tk_library/demos/widget
+	StopOff
+	wm deiconify .
+	}
+}
+proc StopWidgetDemo {} {
+	uplevel #0 {
+		wm deiconify .
+		StopOn
+		eval destroy [winfo children .]
+		StopOff
+		wm withdraw .
+	}
+}
+
+#----------------------------------------------------------------------
+# Create  widgets
+#----------------------------------------------------------------------
+
+set obW .obtclDemo
+
+foreach i "$obW.txt $obW.pw $obW.tab $obW.right $obW" {
+	catch {destroy $i}
+}
+
+toplevel .obtclDemo -width 600 -height 600
+wm geometry .obtclDemo 600x600
+
+StrictMotif
+
+frame $obW.pw
+
+frame $obW.right -borderwidth 2 -relief sunken
+Tab $obW.tab -tab_background grey75 -background lightgrey
+
+pack $obW.tab -fill both -expand yes -in $obW.right
+
+pack $obW.right -expand 1 -fill both -in $obW.pw
+pack configure $obW.right -padx 2
+pack $obW.pw -fill both -expand yes
+
+update
+
+source $demoRoot/README
+
+frame $obW.file -relief groove -borderwidth 2
+
+label $obW.file.welcome -text "Welcome to the obTcl demo!" \
+	-font {-*-new century schoolbook-bold-r-*-*-14-*-*-*-*-*-*-*}
+
+ScrolledText $obW.file.readme -textrelief sunken -state disabled \
+	-scrollbars {x y} -height 4 -background grey80
+$obW.file.readme insert end [GetDOC README]
+frame $obW.file.qf -relief sunken -borderwidth 1
+button $obW.file.quit -text "Quit Demo" -command true_exit
+
+pack $obW.file.welcome -padx 5 -pady 7
+pack $obW.file.readme -expand true -fill both -padx 5 -pady 0
+pack $obW.file.quit -expand no -anchor c -fill none -padx 3 -pady 3 \
+	-in $obW.file.qf
+pack $obW.file.qf -expand no -anchor c -fill none -padx 5 -pady 5
+
+$obW.tab manage [list "About" $obW.file {-padx 10 -pady 10}]
+
+#----------------------------------------------------------------------
+# Handle default buttons.  To be generalized and added to obTcl.
+#
+bind all <Return> "invokeDefaultButton"
+bind all <Control-Return> "invokeDefaultButton"
+bind Text <Return> {
+	tkTextInsert %W \n
+	break
+}
+bind Text <Control-Return> {
+	invokeDefaultButton
+}
+
+proc invokeDefaultButton {} {
+	global _obTcl_defaultButtons
+	foreach i [array names _obTcl_defaultButtons] {
+		if [winfo viewable $i] {
+			eval $_obTcl_defaultButtons($i)
+		}
+	}
+}
+proc addDefaultButton { b action } {
+	global _obTcl_defaultButtons
+	set _obTcl_defaultButtons($b) $action
+}
+
+addDefaultButton $obW.file.quit \
+	"$obW.file.quit configure -relief sunken
+	update
+	after 300
+	$obW.file.quit invoke"
+
+#----------------------------------------------------------------------
+
+proc demoSource file {
+	global obW
+	.obtclDemo configure -cursor watch
+	update
+	grab $obW.file.welcome
+	uplevel #0 "source $file"
+	after idle {.obtclDemo configure -cursor {}
+		grab release $obW.file.welcome
+	}
+}
+
+set b [$obW.tab createTab "Docs"]
+$obW.tab setAction $b "demoSource $demoRoot/docs; \
+	$obW.tab manageAtButton $b $obW.docs {-padx 5 -pady 3}; \
+	$obW.tab triggerAction $b"
+
+set b [$obW.tab createTab "Wrap"]
+$obW.tab setAction $b "demoSource $demoRoot/wrap; \
+	$obW.tab manageAtButton $b $obW.wrap {-padx 10 -pady 10}; \
+	$obW.tab triggerAction $b"
+
+set b [$obW.tab createTab "Tabs"]
+$obW.tab setAction $b "demoSource $demoRoot/tabs; \
+	$obW.tab manageAtButton $b $obW.tabdemo {-padx 10 -pady 10}; \
+	$obW.tab triggerAction $b"
+
+set b [$obW.tab createTab "Paned Window"]
+$obW.tab setAction $b "demoSource $demoRoot/panedw; \
+	$obW.tab manageAtButton $b $obW.panedW {-padx 10 -pady 10}; \
+	$obW.tab triggerAction $b"
+
+. configure -width 300 -height 600
+
+return ""

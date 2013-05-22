@@ -96,16 +96,17 @@ proc otTkScrollButtonDown {w x y} {
 }
 
 proc StrictMotif {} {
-	global tk_version tk_strictMotif _otReferenceSBD
-	set tk_strictMotif 1
-	if { $tk_version == 4.0 ||
-		![string compare [info body tkScrollButtonDown] \
-			[set _otReferenceSBD]] } {
-		if [string compare "" [info procs otTkScrollButtonDown]] {
-			rename tkScrollButtonDown {}
-			rename otTkScrollButtonDown tkScrollButtonDown
-		}
-	}
+    global tk_version tk_strictMotif _otReferenceSBD
+    set tk_strictMotif 1
+    # if { $tk_version >= 7.0 ||
+    # 	![string compare [info body tkScrollButtonDown] \
+    # 		[set _otReferenceSBD]] } {
+    # 	if [string compare "" [info procs otTkScrollButtonDown]] {
+    # 		rename tkScrollButtonDown {}
+    # 		rename otTkScrollButtonDown tkScrollButtonDown
+    # 	}
+    # }
+    rename otTkScrollButtonDown tkScrollButtonDown
 }
 
 proc dbputs s {}
@@ -131,7 +132,7 @@ proc dbputs s {
 #----------------------------------------------------------------------
 # DOCS
 
-setIfNew _uPriv_DOCS() ""
+setIfNewArray _uPriv_DOCS ""
 
 proc DOC_get_list {} {
 	global _uPriv_DOCS
