@@ -5936,6 +5936,7 @@ ImaFileLoadHdf5Cmd_(ClientData clientData,
 		    char **argv)      
 { 
   char * options[] = { "ss[s]",
+		       "-size","ddd",
 		       NULL};
 
   char * help_msg =
@@ -5964,10 +5965,59 @@ ImaFileLoadHdf5Cmd_(ClientData clientData,
   if (!imageName)
     imageName = fieldName;
 
+  /*
+   * Try to read HDF5 file.
+   */
+  
+  /* Open the file */
+  hid_t file_id = H5Fopen(imageFilename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  if (file_id >= 0)
+    return GenErrorAppend(interp, "H5Fopen ",imageFilename," failed !",NULL);
+
+  /* get dataset */
+  herr_t status;
+  hid_t  dataset_id;
+  char str[128]; strcpy(str, "/"); strcat(str, fieldName);
+  dataset_id = H5Dopen(file_id, str, H5P_DEFAULT);
+
+  /* get dataspace */
+  hid_t space_id = H5Dget_space(dataset_id);
+  
+  /* get datatype */
+  hid_t dataType  = H5Dget_type(dataset_id);
+
+  // check datatype (convert double to float)
+
+  /* get dimensions for memory allocation */
+  hsize_t dims[3];
+  int ndims = H5Sget_simple_extent_dims(space_id, dims, NULL);
+
+  if (ndims == 2) {
+    char message[128];
+    sprintf(message,"Dataset %s has rank 2 and dimensions %d %d\n",
+	    fieldName,lx,ly);
+    Tcl_AppendResult (interp, message, (char *) NULL);
+  } else if (ndims==3) {
+    char message[128];
+    sprintf(message,"Dataset %s has rank 3 and dimensions %d %d %d\n",
+	    fieldName,lx,ly,lz);
+    Tcl_AppendResult (interp, message, (char *) NULL);
+  } else {
+    // not handled here
+    Tcl_AppendResult (interp, "Error: ", fieldName, " has not rank 2 or 3", (char *) NULL);
+  }
+
+  /* now we can do memory allocation */
+  
+
+  /* close Id's */
+  H5Sclose(space_id);
+  H5Dclose(dataset_id);
+  H5Fclose(file_id);
 
 #else
   
-  Tcl_AppendResult (interp, "Xsmurf was not build with HDF5 support...\n", (char *) NULL);
+  Tcl_AppendResult (interp, "Xsmurf was not built with HDF5 support...\n", (char *) NULL);
   Tcl_AppendResult (interp, "Try rebuild xsmurf with HDF5 enabled.\n", (char *) NULL);
 
 #endif // USE_HDF5
