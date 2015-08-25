@@ -11071,6 +11071,115 @@ iicut_TclCmd_ (ClientData clientData,
   return TCL_OK;
 }
 
+/**************************************
+ * Command name in xsmurf : iperiodize
+ **************************************/
+int
+iperiodize_TclCmd_ (ClientData clientData,
+		    Tcl_Interp *interp,
+		    int        argc,
+		    char       **argv)
+{ 
+  /* Command line definition */
+  char * options[] = {
+    "Is",
+    NULL
+  };
+
+  char * help_msg = {
+    (" Return a new image twice as large as the original, but periodic.\n"
+     "\n"
+     "Parameters :\n"
+     "  image  - image to cut (source).\n"
+     "  string - image result name.\n")
+  };
+
+  /* Command's parameters */
+  Image *image;
+  char  *name;
+
+  /* Options's presence */
+
+  /* Options's parameters */
+
+  /* Other variables */
+  Image *result;
+  int    lx,ly;
+  int    i,j;
+  int    pos, pos2;
+  real   data;
+
+  /* Command line analysis */
+  if (arg_init (interp, argc, argv, options, help_msg))
+    return TCL_OK;
+  
+  if (arg_get (0, &image, &name) == TCL_ERROR)
+    return TCL_ERROR;
+
+  /* Parameters validity and initialisation */
+  lx = image->lx;
+  ly = image->ly;
+
+  /* Treatement */
+
+  result = im_new (2*lx, 2*ly, 4*lx*ly, PHYSICAL);
+
+  if (!result)
+    return GenErrorMemoryAlloc(interp);
+  im_set_0 (result);
+
+  for (j=0; j<ly; j++)
+    for (i=0; i<lx; i++) {
+      
+      if (i<lx/2 && j<ly/2) {
+	pos = i + lx*j;
+	data = image->data[pos];
+	result->data[lx/2  +i + 2*lx*(ly/2  +j)] = data;
+	result->data[lx/2-1-i + 2*lx*(ly/2  +j)] = data;
+	result->data[lx/2  +i + 2*lx*(ly/2-1-j)] = data;
+	result->data[lx/2-1-i + 2*lx*(ly/2-1-j)] = data;
+
+      }
+
+      if (i<lx/2 && j>=ly/2) {
+	pos = i + lx*j;
+	data = image->data[pos];
+	result->data[lx/2  +i + 2*lx*(     ly/2  +j)] = data;
+	result->data[lx/2-1-i + 2*lx*(     ly/2  +j)] = data;
+	result->data[lx/2  +i + 2*lx*(2*ly+ly/2-1-j)] = data;
+	result->data[lx/2-1-i + 2*lx*(2*ly+ly/2-1-j)] = data;
+
+      }
+
+      if (i>=lx/2 && j<ly/2) {
+	pos = i + lx*j;
+	data = image->data[pos];
+	result->data[     lx/2  +i + 2*lx*(ly/2  +j)] = data;
+	result->data[2*lx+lx/2-1-i + 2*lx*(ly/2  +j)] = data;
+	result->data[     lx/2  +i + 2*lx*(ly/2-1-j)] = data;
+	result->data[2*lx+lx/2-1-i + 2*lx*(ly/2-1-j)] = data;
+
+      }
+
+      if (i>=lx/2 && j>=ly/2) {
+	pos = i + lx*j;
+	data = image->data[pos];
+	result->data[     lx/2  +i + 2*lx*(     ly/2  +j)] = data;
+	result->data[2*lx+lx/2-1-i + 2*lx*(     ly/2  +j)] = data;
+	result->data[     lx/2  +i + 2*lx*(2*ly+ly/2-1-j)] = data;
+	result->data[2*lx+lx/2-1-i + 2*lx*(2*ly+ly/2-1-j)] = data;
+
+      }
+
+    }
+
+  store_image(name, result);
+
+  Tcl_AppendResult(interp,name,NULL);
+
+  return TCL_OK;
+}
+
 
 /*************************************
  * Command name in xsmurf : ithresh

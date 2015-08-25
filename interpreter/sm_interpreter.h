@@ -297,6 +297,8 @@ int i3Dpowspec_TclCmd_ (ClientData, Tcl_Interp *, int, char **);
 
 int iicut_TclCmd_(ClientData, Tcl_Interp *, int, char **); 
 
+int iperiodize_TclCmd_(ClientData, Tcl_Interp *, int, char **); 
+
 int im_thresh_TclCmd_          (ClientData, Tcl_Interp *, int, char **);
 
 int im_thresh_3D_TclCmd_          (ClientData, Tcl_Interp *, int, char **);

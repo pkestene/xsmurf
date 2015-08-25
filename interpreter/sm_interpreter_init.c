@@ -392,6 +392,8 @@ static cmd_info image_cmds[] = {
 
   {"iicut",     (Tcl_CmdProc *) iicut_TclCmd_},
 
+  {"iperiodize",(Tcl_CmdProc *) iperiodize_TclCmd_},
+
   {"ithresh",    (Tcl_CmdProc *) im_thresh_TclCmd_},
 
   {"ithresh3D",    (Tcl_CmdProc *) im_thresh_TclCmd_},
