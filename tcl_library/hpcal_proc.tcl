@@ -938,7 +938,7 @@ proc getallgrad {ext} {
 	    getgrad $ext $x $y gr$i
 	    s2fs sx$i nsx$i x log(abs(y))
 	    s2fs sy$i nsy$i x log(abs(y))
-	    lassign {index} [sgetindex sa$i 100]
+	    mylassign {index} [sgetindex sa$i 100]
 	    set point [sget sa$i $index]
 	    set y_value [lindex $point 0]
 	    set x_value [lindex $point 1]
@@ -2562,7 +2562,7 @@ y*x^$q*log(x^$q/$val)/($val*log(2.0))
 proc im2dat {im fName} {
     set f [open $fName w]
 
-    lassign {gah lx ly} [iinfo $im]
+    mylassign {gah lx ly} [iinfo $im]
 
     puts $f "$lx 0 0 1\nhaha\n$ly 0 0 1\nhoho"
 
@@ -2584,8 +2584,8 @@ proc lvc2dat {extImage lFileName aFileName cFileName {mult -1} {istag 0}} {
     set lFileId [open $lFileName w]
     set aFileId [open $aFileName w]
     set cFileId [open $cFileName w]
-    lassign {scale lx ly extrNb chainNb nbOfLines stamp} [einfo $extImage]
-    lassign {min max} [egetextr $extImage]
+    mylassign {scale lx ly extrNb chainNb nbOfLines stamp} [einfo $extImage]
+    mylassign {min max} [egetextr $extImage]
     if {$mult == -1} {
 	set mult [expr 30.0/$max]
     }
@@ -2625,8 +2625,8 @@ proc lvc2dat {extImage lFileName aFileName cFileName {mult -1} {istag 0}} {
 
 proc gr2dat {extImage aFileName {mult -1}} {
     set aFileId [open $aFileName w]
-    lassign {scale lx ly extrNb chainNb nbOfLines stamp} [einfo $extImage]
-    lassign {min max} [egetextr $extImage]
+    mylassign {scale lx ly extrNb chainNb nbOfLines stamp} [einfo $extImage]
+    mylassign {min max} [egetextr $extImage]
     if {$mult == -1} {
 	set mult [expr 30.0/$max]
     }
@@ -2643,8 +2643,8 @@ proc gr2dat {extImage aFileName {mult -1}} {
 proc ma2dat {mod arg aFileName cFileName {step 1}} {
     set aFileId [open $aFileName w]
     set cFileId [open $cFileName w]
-    lassign {dummy lx ly} [iinfo $mod]
-    lassign {min max} [im_extrema $mod]
+    mylassign {dummy lx ly} [iinfo $mod]
+    mylassign {min max} [im_extrema $mod]
     set mult [expr 30.0/$max]
     imloop $mod {
         if {[expr $x%$step] == 0 && [expr $y%$step] == 0 } {

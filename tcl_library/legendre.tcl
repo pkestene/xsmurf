@@ -226,7 +226,7 @@ proc legendre2 {tq args} {
     set tauLst [list]
 
     for {set i $iMin} {$i < $iMax} {incr i} {
-	lassign {tau q} [sget $tq $i]
+	mylassign {tau q} [sget $tq $i]
 	lappend qLst $q
 
 	# Get the piece of signal to fit. Around the point q.
@@ -234,8 +234,8 @@ proc legendre2 {tq args} {
 		[expr { $i - $m }] \
 		[expr { $n - ($i + $m) - 1 }]
 
-	lassign {gah qMin} [sget $tmp 0]
-	lassign {gah qMax} [sget $tmp [expr { 2*$m }]]
+	mylassign {gah qMin} [sget $tmp 0]
+	mylassign {gah qMax} [sget $tmp [expr { 2*$m }]]
 
 	s2fs $tmp $error x 0.005*abs(x)+.00001
 	scopy $orderSig2 $orderSig
@@ -246,10 +246,10 @@ proc legendre2 {tq args} {
  	polyf $tmp $error $orderSig gah -fit $qValues
 
  	sderiv $qValues h
- 	lassign {h gah} [sget h 0]
+ 	mylassign {h gah} [sget h 0]
  	lappend hLst $h
 
- 	lassign {tau gah} [sget $qValues 0]
+ 	mylassign {tau gah} [sget $qValues 0]
 	lappend tauLst $tau
 
  	lappend DLst [expr { $q*$h - $tau }]

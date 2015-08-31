@@ -912,7 +912,7 @@ myEiWin method reinit {} {
 
     instvar zoom
 
-    lassign {gah width height} [einfo $curSig]
+    mylassign {gah width height} [einfo $curSig]
     set eihoffset 0
     set eivoffset 0
 

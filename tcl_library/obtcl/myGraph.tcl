@@ -136,7 +136,7 @@ myGraph method init {canvas w h x_pos y_pos sig_lst} {
     set dispMode one
     set logMode normal
     foreach sigDesc $sig_lst {
-	lassign {sig type color theLabel} $sigDesc
+	mylassign {sig type color theLabel} $sigDesc
 	if {$type == ""} {
 	    set type line
 	}

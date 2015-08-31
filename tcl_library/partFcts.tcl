@@ -922,21 +922,21 @@ proc pf::thdFit {pfid aMin aMax args} {
     foreach q $q_lst {
 	set q_str [get_q_str $q]
 	
-	lassign {a_min a_max} [GetRange $q $aMin $aMax $rangeLst]
-	lassign {a_minH a_maxH} [GetRange $q $aMinH $aMaxH $rangeLst]
+	mylassign {a_min a_max} [GetRange $q $aMin $aMax $rangeLst]
+	mylassign {a_minH a_maxH} [GetRange $q $aMinH $aMaxH $rangeLst]
 	# normalisation
 	#scomb ${name}_tau$q_str ${name}_tau0p00 x-y ${name}_tau$q_str
 	# 
-	lassign {a b sigA} [sfit ${name}_tau$q_str $a_min $a_max]
+	mylassign {a b sigA} [sfit ${name}_tau$q_str $a_min $a_max]
 
 	lappend Z_fitLst $a
 	lappend sigmaZ_fitLst $sigA
 
-	lassign {a b sigA} [sfit ${name}_D$q_str $a_min $a_max]
+	mylassign {a b sigA} [sfit ${name}_D$q_str $a_min $a_max]
 	lappend D_fitLst $a
 	lappend sigmaD_fitLst $sigA
 	#echo toto
-	lassign {a b sigA} [sfit ${name}_h$q_str $a_minH $a_maxH]
+	mylassign {a b sigA} [sfit ${name}_h$q_str $a_minH $a_maxH]
 	lappend h_fitLst $a
 	lappend sigmah_fitLst $sigA
     }
@@ -1036,7 +1036,7 @@ proc pf::ess {pfid aMin aMax args} {
 	
 	set q_str [get_q_str $q]
 	
-	lassign {a_min a_max} [GetRange $q $aMin $aMax $rangeLst]
+	mylassign {a_min a_max} [GetRange $q $aMin $aMax $rangeLst]
 	
 	if {$q_str=="0p00"} {
 	    echo $q_str
@@ -1060,7 +1060,7 @@ proc pf::ess {pfid aMin aMax args} {
 	    }
 	
 	}  
-	lassign {a b sigA} [sfit ${name}_tau2$q_str $a_min $a_max]
+	mylassign {a b sigA} [sfit ${name}_tau2$q_str $a_min $a_max]
 	
 	lappend Z_fitLst $a
 	lappend sigmaZ_fitLst $sigA
@@ -1215,18 +1215,18 @@ proc pf::thdFit_tsallis {pfid aMin aMax qtsa args} {
     foreach q $q_lst {
 	set q_str [get_q_str $q]
 	
-	lassign {a_min a_max} [GetRange $q $aMin $aMax $rangeLst]
+	mylassign {a_min a_max} [GetRange $q $aMin $aMax $rangeLst]
 #	echo $q $aMin $aMax
-	lassign {a b sigA} [sfit ${name}_logZtsa${q_str}_${qtsa_str} $a_min $a_max]
+	mylassign {a b sigA} [sfit ${name}_logZtsa${q_str}_${qtsa_str} $a_min $a_max]
 #	echo $a
 	lappend Ztsa_fitLst $a
 	lappend sigmaZtsa_fitLst $sigA
 
-	lassign {a b sigA} [sfit ${name}_Dtsa${q_str}_${qtsa_str} $a_min $a_max]
+	mylassign {a b sigA} [sfit ${name}_Dtsa${q_str}_${qtsa_str} $a_min $a_max]
 	lappend Dtsa_fitLst $a
 	lappend sigmaDtsa_fitLst $sigA
 	#echo toto
-	lassign {a b sigA} [sfit ${name}_htsa${q_str}_${qtsa_str} $a_min $a_max]
+	mylassign {a b sigA} [sfit ${name}_htsa${q_str}_${qtsa_str} $a_min $a_max]
 	lappend htsa_fitLst $a
 	lappend sigmahtsa_fitLst $sigA
     }

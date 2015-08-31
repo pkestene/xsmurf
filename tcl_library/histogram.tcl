@@ -602,11 +602,11 @@ proc rhdisp {typeLst alphaLst scaleIdLst} {
 #   The moment.
 
 proc smoment {signal order} {
-    lassign {type n} [sinfo $signal]
+    mylassign {type n} [sinfo $signal]
 
     return [expr { [sfct $signal pow(x,$order)]/$n }]
 }
-
+
 
 # sstats --
 # usage: sstats Signal int

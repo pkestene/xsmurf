@@ -102,7 +102,7 @@ proc chains2dat {eiName args} {
 		    set xOffset $offset
 		    set yOffset $offset
 		} else {
-		    lassign {xOffset yOffset} $offset
+		    mylassign {xOffset yOffset} $offset
 		}
 	    }
 	    -zoom {
@@ -123,8 +123,8 @@ proc chains2dat {eiName args} {
 	}
     }
 
-    lassign {scale lx ly extrNb chainNb nbOfLines stamp} [einfo $eiName]
-    lassign {min max} [egetextr $eiName]
+    mylassign {scale lx ly extrNb chainNb nbOfLines stamp} [einfo $eiName]
+    mylassign {min max} [egetextr $eiName]
 
     if {$isCenter == "yes"} {
 	set xOffset [expr { -$lx/2 }]

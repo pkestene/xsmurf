@@ -26,7 +26,7 @@
 proc edisp {eiName args} {
     global viewNb
 
-    lassign {gah cvwidth cvheight} [einfo [lindex $eiName 0]]
+    mylassign {gah cvwidth cvheight} [einfo [lindex $eiName 0]]
     set eihoffset 0
     set eivoffset 0
     if {$cvwidth >= 400} {

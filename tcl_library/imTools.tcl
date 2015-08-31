@@ -24,7 +24,7 @@ package provide imTools
 #   The moment.
 
 proc imoment {image order} {
-    lassign {type lx ly min max} [iinfo $image]
+    mylassign {type lx ly min max} [iinfo $image]
     set size [expr { $lx*$ly }]
 
     return [expr { [ifct $image pow(x,$order)]/$size }]
@@ -145,7 +145,7 @@ proc correlation {im1 im2 args} {
 	set w2Name $im2
     }
 
-    lassign {type lx ly min max} [iinfo $im1]
+    mylassign {type lx ly min max} [iinfo $im1]
     set size [expr { [im_size $im1]/2 }]
     
     set nbOfPoints [expr { $lx*$ly }]

@@ -2840,7 +2840,7 @@ namespace eval imStudy {
 	if {$ishistoinit} {
 	    if {$isgaussian} {
 		logMsg "Histograms init (Gradient)."
-		lassign {hm hM} [limitsG]
+		mylassign {hm hM} [limitsG]
 		histInitG $hm $hM
 	    }
 	}

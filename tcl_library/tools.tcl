@@ -52,8 +52,16 @@ proc grmv {name new_name inf sup {pas 1}} {
     }
 }
 
-# lassign --
-# usage : lassign list list
+#
+# Take car that lassign has become a built-in command in tcl 8.5
+# but with a different syntax.
+#
+# So here we change lassign into mylassign
+#
+
+
+# mylassign --
+# usage : mylassign list list
 #
 #   Assign, one by one, a list of values to a list of variables.
 #
@@ -64,12 +72,12 @@ proc grmv {name new_name inf sup {pas 1}} {
 # Return value :
 #   None.
 
-proc lassign {variables values} {
+proc mylassign {variables values} {
     uplevel 1 [list \
 	    foreach $variables $values { break } \
 	    ]
 }
-
+
 
 # objlist --
 # usage : objlist expr
