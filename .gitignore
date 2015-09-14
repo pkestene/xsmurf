@@ -16,5 +16,10 @@ m4/ltversion.m4
 m4/lt~obsolete.m4
 missing
 
+# tcl related generated files
+tcl_library/obtcl/tclIndex
+tcl_library/pkgIndex.tcl
+tcl_library/tclIndex
+
 # build
 build_*
