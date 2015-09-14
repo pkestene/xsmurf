@@ -2977,11 +2977,11 @@ proc pf::OnePf_tsallis {pfid sourceBaseName mathExpr1 mathExpr2 fctName args} {
 #
 # modified by pierre kestener on 21 mar 2001
 # option -tsallis
-# abandonned !
+# abandoned !
 #
 # modified by pierre kestener on 07 nov 2001
 # option -turbulence
-# abandonned !
+# abandoned !
 #
 # modified by PK (21/04/2006)
 # option -mask [I]
