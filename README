@@ -4,16 +4,15 @@ TO INSTALL :
 
 ###################################################################
 0) REQUIRED EXTERNAL LIBRARIES: 
-Tcl/Tk (with header files), libfftw (single precision), libjpeg, libmatheval (with headers)
+Tcl/Tk (with header files), libfftw (single precision), libjpeg, libmatheval (with headers), X11 (libxi-dev, libxt-dev, ...)
+
+   On Ubuntu/Debian like system:
+   sudo apt-get install libfftw3-dev tcl8.5-dev tk8.5-dev libmatheval-dev libjpeg-dev
+   sudo apt-get install libx11-dev libxi-dev libxt-dev libxmu-dev libxau-dev
 
 
-   make sure that library fftw 2.x is installed with float enabled 
-(symbol FFTW_ENABLE_FLOAT must be defined)
-
-download fftw lib sources:
-	wget http://www.fftw.org/fftw-2.1.5.tar.gz
-
-unzip fftw sources, configure for shared lib and make:
+   Notice: make sure that library fftw 3.x is installed with float enabled 
+(symbol FFTW_ENABLE_FLOAT must be defined). This is OK, if you installed FFTW3 using apt-get, but if you installed it from sources, make sure to have used option '--enable-float' when configuring fftw3 sources:
 
 	./configure --enable-float --prefix=/some/directory --enable-shared --disable-static --enable-type-prefix
 	make
@@ -26,12 +25,7 @@ Tcllib
 ##############################################################################
 2) XSMURF INSTALLATION: execute following commands:
 
-	./configure 
-
-if fftw or jpeg library are installed in unusual location you should provide
-these location using configure options:
-
-	./configure --with-fftw=/home/somebody/local
+	./configure --with-tcl=/usr/lib/tcl8.5 --with-tk=/usr/lib/tk8.5 --with-hdf5=no
 
 ##############################################################################
 3) COMPILE: try to compile xsmurf 
