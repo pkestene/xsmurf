@@ -1668,7 +1668,7 @@ proc imStudy::wtmmg2d_vector {args} {
     scalesLoop {
 	if [uplevel expr $condition] {
 	    logMsg "  Octave $oct - vox $vox - scale $scale ( $scaleId )"
-	    set result [WtmmgCurrentScale $theDir/__ft1_[pid] $theDir/__ft2_[pid]]
+	    set result [WtmmgCurrentScale $theDir/__ft1_[pid] -vector2d $theDir/__ft2_[pid]]
 	    set modId [lindex $result 0]
 	    set argId [lindex $result 1]
 	    set maxId [lindex $result 2]
