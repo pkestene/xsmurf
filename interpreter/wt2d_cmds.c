@@ -14280,7 +14280,7 @@ e_vc_gerbe_TclCmd_ (ClientData clientData,
      "                     only with points at top of vertical chains\n"
      "   -scalemin [sd]  : display chains that still exist above that integer\n"
      "   -between  [sdd] : same as above but keep chains whose top is between\n"
-     "                     scale_low and scale_up"
+     "                     scale_low and scale_up\n"
      "   -decrease [s]\n"
      "   -increase [s]\n"
      "\n"
