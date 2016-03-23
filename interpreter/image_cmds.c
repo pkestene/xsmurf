@@ -3448,24 +3448,45 @@ int ImaTopGetValueCmd_(ClientData clientData,Tcl_Interp *interp,
 
   Affiche la valeur d'un point d'une image
   ----------------------------------------------------------------------*/
+/*
+ * Command name in xsmurf : im_size
+ */
 int ImaTopGetSizeCmd_(ClientData clientData,Tcl_Interp *interp,
 		      int argc,char **argv)      
 {
   char * options[] = { "I",
+		       "-y", "",
 		       NULL };
 
   char * help_msg =
-    {("Give the size of the image in the direction of x and y (image).")};
+    {
+      ("Give the size of the image in the x direction."
+       "\n"
+       "Parameters:\n"
+       "  image   - image to treat.\n"
+       "Options:\n"
+       "  -y: return the size of image in the y direction.\n")
+    };
 
+  /* Command's parameters */
   Image * image;
+
+  /* Options's presence */
+  int isY=0;
   
   if (arg_init (interp, argc, argv, options, help_msg))
     return TCL_OK;
 
   if (arg_get(0,&image)==TCL_ERROR)
     return TCL_ERROR;
- 
-  sprintf(interp->result,"%d", image->lx);
+
+  isY = arg_present(1);
+
+  if (isY)
+    sprintf(interp->result,"%d", image->ly);
+  else
+    sprintf(interp->result,"%d", image->lx);
+
   return TCL_OK;
 }
 
@@ -10281,10 +10302,10 @@ create_im_TclCmd_ (ClientData clientData,
 
   /* Treatement */
 
-  image = im_new (size, size, size*size, PHYSICAL);
+  image = im_new (image->lx, image->ly, image->lx*image->ly, PHYSICAL);
 
-  for (x = 0; x < image->lx; x++) {
-    for (y = 0; y < image->ly; y++) {
+  for (y = 0; y < image->ly; y++) {
+    for (x = 0; x < image->lx; x++) {
       pos = x+y*image->lx;
       image->data[pos] = evaluator_evaluate_x_y (fct, (double)x,(double)y);
     }
@@ -10293,6 +10314,7 @@ create_im_TclCmd_ (ClientData clientData,
   evaluator_destroy(fct);
 
   store_image(name,image);
+
   Tcl_AppendResult(interp,name,NULL);
 
   return TCL_OK;

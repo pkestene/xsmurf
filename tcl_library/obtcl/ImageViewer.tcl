@@ -12,7 +12,7 @@ class ImageViewer
 ImageViewer inherit SmurfViewer
 
 ImageViewer method init args {
-    instvar special extr currentImage x y val k old_color zoom size
+    instvar special extr currentImage x y val k old_color zoom size_x size_y
     instvar first_box_corner_x first_box_corner_y
     instvar last_box_corner_x last_box_corner_y
 
@@ -45,7 +45,8 @@ ImageViewer method init args {
     # commencent a zero)
     eval set extr [lrange $args 1 end]
 
-    set size [im_size $currentImage]
+    set size_x [im_size $currentImage]
+    set size_y [im_size $currentImage -y]
     set special $currentImage
 
     eval iconvert $currentImage $self.viewer.content -zoom $zoom $extr -pos $x $y
@@ -150,7 +151,7 @@ ImageViewer method prev_im {} {
 }
 
 ImageViewer method set_first_box_corner {pos_x pos_y} {
-    instvar size first_box_corner_x first_box_corner_y zoom
+    instvar size_x size_y first_box_corner_x first_box_corner_y zoom
 
     $self my_plot
     set first_box_corner_x [expr round($pos_x/$zoom)]
@@ -159,7 +160,7 @@ ImageViewer method set_first_box_corner {pos_x pos_y} {
 }
 
 ImageViewer method set_last_box_corner {pos_x pos_y} {
-    instvar size last_box_corner_x last_box_corner_y zoom
+    instvar size_x size_y last_box_corner_x last_box_corner_y zoom
 
     $self my_plot
     set last_box_corner_x [expr round($pos_x/$zoom)]
@@ -228,18 +229,18 @@ ImageViewer method hcut {pos_y} {
 }
 
 ImageViewer method down {} {
-    instvar size x y
+    instvar size_x size_y x y
 
     if {$x != "" && $y != ""} {
 	$self my_plot
-	if { $y < [expr $size-1]} {incr y}
+	if { $y < [expr $size_y-1]} {incr y}
 	$self display_val
 	$self my_plot 2
     }
 }
 
 ImageViewer method up {} {
-    instvar size x y
+    instvar size_x size_y x y
 
     if {$x != "" && $y != ""} {
 	$self my_plot
@@ -250,18 +251,18 @@ ImageViewer method up {} {
 }
 
 ImageViewer method right {} {
-    instvar size x y
+    instvar size_x size_y x y
 
     if {$x != "" && $y != ""} {
 	$self my_plot
-	if { $x < [expr $size-1]} {incr x}
+	if { $x < [expr $size_x-1]} {incr x}
 	$self display_val
 	$self my_plot 2
     }
 }
 
 ImageViewer method left {} {
-    instvar size x y
+    instvar size_x size_y x y
 
     if {$x != "" && $y != ""} {
 	$self my_plot
@@ -272,7 +273,7 @@ ImageViewer method left {} {
 }
 
 ImageViewer method mouse_goto {pos_x pos_y} {
-    instvar size x y zoom
+    instvar size_x size_y x y zoom
 
     $self my_plot
     set x [expr round($pos_x/$zoom)]
