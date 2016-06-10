@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/22606/pkestene/xsmurf.svg)](https://zenodo.org/badge/latestdoi/22606/pkestene/xsmurf)
+
 # What is xsmurf ?
 
 Xsmurf is a C/Tcl/Tk software implementation of the image processing WTMM method used to perform multifractal analysis.
