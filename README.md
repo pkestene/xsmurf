@@ -1,44 +1,64 @@
-------------
-TO INSTALL :
-------------
+# What is xsmurf ?
 
-###################################################################
-0) REQUIRED EXTERNAL LIBRARIES: 
+Xsmurf is a C/Tcl/Tk software implementation of the image processing WTMM method used to perform multifractal analysis.
+WTMM stands for Wavelet-based Modulus Maxima.
+
+See the following article about multifractal analysis.
+
+http://www.scholarpedia.org/article/Wavelet-based_multifractal_analysis
+
+# Before installing Xsmurf
+
+## External libraries
+
+### Required
+
 Tcl/Tk (with header files), libfftw (single precision), libjpeg, libmatheval (with headers), X11 (libxi-dev, libxt-dev, ...)
 
    On Ubuntu/Debian like system:
+```bash
    sudo apt-get install libfftw3-dev tcl8.5-dev tk8.5-dev libmatheval-dev libjpeg-dev
    sudo apt-get install libx11-dev libxi-dev libxt-dev libxmu-dev libxau-dev
-
+```
 
    Notice: make sure that library fftw 3.x is installed with float enabled 
 (symbol FFTW_ENABLE_FLOAT must be defined). This is OK, if you installed FFTW3 using apt-get, but if you installed it from sources, make sure to have used option '--enable-float' when configuring fftw3 sources:
 
-	./configure --enable-float --prefix=/some/directory --enable-shared --disable-static --enable-type-prefix
-	make
-	make install
+```bash
+./configure --enable-float --prefix=/some/directory --enable-shared --disable-static --enable-type-prefix
+make
+make install
+```
 
-##############################################################################
-1) OPTIONNAL EXTERNAL LIBRARIES: libvtk5 and vtk-tcl (tcl bindings for libvtk)
+### OPTIONNAL
+
+libvtk5
+
+vtk-tcl (tcl bindings for libvtk)
+
 Tcllib
 
-##############################################################################
-2) XSMURF INSTALLATION: execute following commands:
+# XSMURF INSTALLATION
+
+## Configure
+
+Execute following commands:
 
 	./configure --with-tcl=/usr/lib/tcl8.5 --with-tk=/usr/lib/tk8.5 --with-hdf5=no
 
-##############################################################################
-3) COMPILE: try to compile xsmurf 
+## Build
 
 	make
 
-##############################################################################
-4) launch executable (launch tk console with our customized tcl interpreter)
+# Run
+
+launch executable (launch tk console with our customized tcl interpreter)
 
 	./main/xsmurf
 
-##############################################################################
-5) have a look at documentation
+# Documentation
+
+Have a look at documentation
 
 	doc/examples contains a few commented scripts to use the tools
 
@@ -60,11 +80,8 @@ To have more info about TkCon:
 http://wfr.tcl.tk/fichiers/pub/CoursTkCon.pdf
 http://wfr.tcl.tk/282
 
-----------------
-To install man :
-----------------
+# Tutorial
 
-install -c -m 0644 xsmurf.man /usr/local/man/man1/xsmurf.1x
-
+See directory doc/templates which contains example Tcl scripts to perform WTMM analysis.
 
 
