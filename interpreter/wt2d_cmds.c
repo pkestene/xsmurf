@@ -5460,6 +5460,8 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
     "IIsfss",
     "-vector", "II",
     "-svdtype", "d",
+    "-svd_LT", "ss",
+    "-svd_LT_max", "ss",
     NULL
   };
   
@@ -5480,11 +5482,12 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
      "  -vector [II]: extract contour lines of a 2D -> 2D vector field.\n"
      "                user must provide (gradX, gradY) image of the second\n"
      "                component of the vector field.\n"
-     "  -svdtype [d]: argument must be 0, 1, 2 or 3.\n"
+     "  -svdtype [d]: argument must be 0, 1.\n"
      "                SVD_TYPE_MAX(=0) means get max value + associated direction\n"
      "                SVD_TYPE_MIN(=1) means get min value + associated direction\n"
-     "                SVD_TYPE_MAX_L(=2) means get max SVD direction with max of symetric WT tensor (kind of longitudinal increments)\n"
-     "                SVD_TYPE_MAX_T(=3) means get max SVD direction with max of anti-symetric WT tensor (kind of transverse increments)\n"
+     "  -svd_LT [ss]: also output the longitudinal/transversal information (2 strings required\n"
+     "                for the names of the additional ext-images\n"
+     "  -svd_LT_max [ss]: if this option is present, we also output maxima chains, with modL/modT values\n"
      "\n"
      "Return value:\n"
      "  None.\n"
@@ -5500,11 +5503,15 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
   /* Options's presence */
   int isVector;
   int isSvdType;
-  
+  int isSvd_LT;
+  int isSvd_LT_max;
+    
   /* Options's parameters */
   Image    *gradx2, *grady2;
   int       svdtype = SVD_TYPE_MAX;
-
+  char     *modName_L, *modName_T;
+  char     *modName_ext_L, *modName_ext_T;
+  
   /* Other variables */
   ExtImage *extImage;
   Extremum *extremum;
@@ -5514,9 +5521,16 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
   int pos;
   int nb_of_maxima=0;
 
+  // Regular Wavelet Transform vector
   Image *Mod, *Arg;
   float *mod,*arg,*max;
 
+  // longitudinal / transversal information
+  Image *ModL, *ModT;
+  float *modL, *modT;
+  ExtImage *extImage_modL;
+  ExtImage *extImage_modT;
+  
   /* Command line analysis */
   if (arg_init (interp, argc, argv, options, help_msg)) {
     return TCL_OK;
@@ -5537,6 +5551,29 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
   if (isSvdType) {
     if (arg_get(2, &svdtype) == TCL_ERROR) {
       return TCL_ERROR;
+    }
+
+    if (svdtype != SVD_TYPE_MAX && svdtype != SVD_TYPE_MIN)
+      return GenErrorAppend(interp,"Bad value for option svdtype (0 or 1 accepted)",
+			    NULL);
+  }
+
+  isSvd_LT = arg_present(3);
+  if (isSvd_LT) {
+    if (arg_get(3, &modName_L, &modName_T) == TCL_ERROR) {
+      return TCL_ERROR;
+    }
+  }
+
+  isSvd_LT_max = arg_present(4);
+  if (isSvd_LT_max) {
+    if (arg_get(4, &modName_ext_L, &modName_ext_T) == TCL_ERROR) {
+      return TCL_ERROR;
+    }
+
+    if (!isSvd_LT) {
+      return GenErrorAppend(interp,"Option svd_LT_max cannot be used if svd_LT is not acitvated (longitudinal/tranversal information must have been computed)",
+			    NULL);
     }
   }
 
@@ -5579,16 +5616,37 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
   arg = Arg->data;
   max = (float *) malloc (gradx->size * sizeof(float));
 
+  if (isSvd_LT) {
+    ModL = im_new (gradx->lx, gradx->ly, gradx->size, gradx->type);
+    ModT = im_new (gradx->lx, gradx->ly, gradx->size, gradx->type);
+    if ((!ModL) || (!ModT))
+      return TCL_ERROR;
+    modL = ModL->data;
+    modT = ModT->data;
+  }
+  
   /* Treatement */
   smSetBeginTime();
 
   if (isVector) {
+    
+    // Extract Longitudinal / Transversal information
+    // gradx,grady are not modified by this
+    // modL / modT are output
+    if (isSvd_LT) { 
+      Extract_Gradient_Maxima_2D_vectorfield_LT( gradx, grady, gradx2, grady2, modL, modT);
+    }
+
+    // gradx,grady will be modified after this function call
     Extract_Gradient_Maxima_2D_vectorfield( gradx, grady, gradx2, grady2, mod, arg, max, scale, svdtype);
-  } else {
+
+  } else { // the regular scalar WT
+
     Extract_Gradient_Maxima_2D( gradx, grady, mod, arg, max, scale);
+
   }
   
-  
+  // compute the number of maxima (used right after for ext-image memory allocation)
   {
     float *tmpMax = (float *) max;
     int i;
@@ -5603,6 +5661,21 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
   extImage = w2_ext_new (nb_of_maxima, lx, ly, scale);
   if (!extImage) {
     return GenErrorMemoryAlloc(interp);
+  }
+
+  // if isSvd_LT_max is true, we also save ext-image containing Longitudinal / Transversal wavelet values
+  if (isSvd_LT_max) {
+    
+    extImage_modL = w2_ext_new (nb_of_maxima, lx, ly, scale);
+    extImage_modT = w2_ext_new (nb_of_maxima, lx, ly, scale);
+
+    if (!extImage_modL) {
+      return GenErrorMemoryAlloc(interp);
+    }
+    if (!extImage_modT) {
+      return GenErrorMemoryAlloc(interp);
+    }
+
   }
   
   /*
@@ -5625,21 +5698,61 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
     }
   }
 
+  // update Longitudinal / Transversal extImage
+  if (isSvd_LT_max) {
+
+    Extremum *extremumL, *extremumT;
+
+    extremumL = extImage_modL->extr;
+    extremumT = extImage_modT->extr;
+    
+    float *tmpModL = (float *) modL;
+    float *tmpModT = (float *) modT;
+    float *tmpArg = (float *) arg;
+    float *tmpMax = (float *) max;
+    int i;
+    for (i = 0; i < lx*ly; i++, tmpModL++, tmpModT++, tmpArg++, tmpMax++) {
+      if (*tmpMax>0) {
+	extremumL->mod = *tmpModL;
+	extremumT->mod = *tmpModT;
+	
+	extremumL->arg = *tmpArg;
+	extremumT->arg = *tmpArg;
+
+	extremumL->pos = i;
+	extremumT->pos = i;
+	
+	extremumL++;
+	extremumT++;
+
+      }
+    }
+    
+  } // end of isSvd_LT_max
+
   smSetEndTime();
 
   ExtDicStore(extImageName,extImage);
   store_image(modName,Mod);
   store_image(argName,Arg);
+
+  if (isSvd_LT) {
+    store_image(modName_L, ModL);
+    store_image(modName_T, ModT);
+  }
+
+  if (isSvd_LT_max) {
+    ExtDicStore(modName_ext_L, extImage_modL);
+    ExtDicStore(modName_ext_T, extImage_modT);
+  }
   
   sprintf(interp->result, "%f", smGetEllapseTime());
   
-  /*free(mod);
-    free(arg);*/
   free(max);
 
   return TCL_OK;
-}
-
+  
+} // w2_wtmm2d_TclCmd_
 
 /*********************************
  * Command name in xsmurf : eiset

@@ -6,6 +6,16 @@
 
 #include "misc.h"
 
+static inline
+float MAX3(float a0, float a1, float a2) {
+  
+  float returnVal = a0;
+  returnVal = ( a1 > returnVal) ? a1 : returnVal;
+  returnVal = ( a2 > returnVal) ? a2 : returnVal;
+
+  return returnVal;
+} // MAX3
+
 /* Compute the gradient modulus in 2-D.
  *
  * gradient_modulus = sqrt (
@@ -149,7 +159,35 @@ void GradientModulus2D_tensor2D( float *gradient_modulus,
     free(rv1);
   }
   
-}
+} // GradientModulus2D_tensor2D
+
+void GradientModulus2D_tensor2D_LT( float *derivative_along_X1,
+				    float *derivative_along_Y1,
+				    float *derivative_along_X2,
+				    float *derivative_along_Y2,
+				    int length,
+				    float *modL,
+				    float *modT)
+{
+
+  int i;
+
+  for ( i=0; i<length; i++) {
+    
+    float gx1 = derivative_along_X1[i];
+    float gy1 = derivative_along_Y1[i];
+    float gx2 = derivative_along_X2[i];
+    float gy2 = derivative_along_Y2[i];
+    
+    // max of symetric tensor part
+    modL[i] = MAX3( fabs(gx1), fabs(gy2), 0.5*fabs(gx2 + gy1) );
+    
+    // max of anti-symetric tensor part
+    modT[i] = fabs( gx2-gy1 );
+
+  }
+  
+} // GradientModulus2D_tensor2D_LT
 
 /* void GradientModulus2D_tensor2D_vector( fftw_real *derivative_along_X1, */
 /* 					fftw_real *derivative_along_Y1, */

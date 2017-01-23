@@ -98,11 +98,15 @@ void GradientModulus3D( float *gradient_modulus, /* result buffer */
  * 
  * \param[out] gradient_modulus
  * \param[out] gradient_argument
- * \param[in] derivative_along_X1
- * \param[in] derivative_along_Y1
+ * \param[in,out] derivative_along_X1
+ * \param[in,out] derivative_along_Y1
  * \param[in] derivative_along_X2
  * \param[in] derivative_along_Y1
  * \param[in] type (a valid value is taken from enum SVD_TYPE)
+ *
+ * Take care that derivative_along_X1, derivative_along_Y1 are modified
+ * by this routine; contains the WT vector (direction of the largest/smallest 
+ * singular value).
  */
 void GradientModulus2D_tensor2D( float *gradient_modulus,
 				 float *gradient_argument,
@@ -112,6 +116,20 @@ void GradientModulus2D_tensor2D( float *gradient_modulus,
 				 float *derivative_along_Y2,
 				 int length,
 				 int type);
+
+/**
+ * Compute tha maximum value of the symetric / antisymetric part of the WT tensor.
+ *
+ * The first 4 arguments are the WT tensor components.
+ * The output are modL / modT. 
+ */
+void GradientModulus2D_tensor2D_LT( float *derivative_along_X1,
+				    float *derivative_along_Y1,
+				    float *derivative_along_X2,
+				    float *derivative_along_Y2,
+				    int length,
+				    float *modL,
+				    float *modT);
 
 /* void GradientModulus2D_tensor2D_vector( fftw_real *derivative_along_X1, */
 /* 					fftw_real *derivative_along_Y1, */
