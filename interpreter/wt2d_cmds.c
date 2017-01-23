@@ -5486,7 +5486,7 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
      "                SVD_TYPE_MAX(=0) means get max value + associated direction\n"
      "                SVD_TYPE_MIN(=1) means get min value + associated direction\n"
      "  -svd_LT [ss]: also output the longitudinal/transversal information (2 strings required\n"
-     "                for the names of the additional ext-images\n"
+     "                for the names of the additional images\n"
      "  -svd_LT_max [ss]: if this option is present, we also output maxima chains, with modL/modT values\n"
      "\n"
      "Return value:\n"
@@ -5578,7 +5578,8 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
   }
 
   /* Parameters validity and initialisation */
-  if ((gradx->lx != grady->lx) || (gradx->ly != grady->ly)) {
+  if ((gradx->lx != grady->lx) ||
+      (gradx->ly != grady->ly)) {
     Tcl_AppendResult(interp, "Inputs must have the same sizes!!!.", NULL);
     return TCL_ERROR;
   }
@@ -5634,11 +5635,15 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
     // gradx,grady are not modified by this
     // modL / modT are output
     if (isSvd_LT) { 
-      Extract_Gradient_Maxima_2D_vectorfield_LT( gradx, grady, gradx2, grady2, modL, modT);
+      Extract_Gradient_Maxima_2D_vectorfield_LT( gradx,  grady,
+						 gradx2, grady2,
+						 modL, modT);
     }
 
     // gradx,grady will be modified after this function call
-    Extract_Gradient_Maxima_2D_vectorfield( gradx, grady, gradx2, grady2, mod, arg, max, scale, svdtype);
+    Extract_Gradient_Maxima_2D_vectorfield( gradx,  grady,
+					    gradx2, grady2,
+					    mod, arg, max, scale, svdtype);
 
   } else { // the regular scalar WT
 
