@@ -850,6 +850,7 @@ proc pf::thdFit {pfid aMin aMax args} {
     set rangeLst {}
     set isOnlyerror no
     set isqlst no
+    set isESS no
 
     set aMinH $aMin
     set aMaxH $aMax
@@ -866,6 +867,10 @@ proc pf::thdFit {pfid aMin aMax args} {
 		set isOnlyerror yes
 		set args [lreplace $args 0 0]
 	    }
+            -ESS {
+	        set isESS yes
+                set args [lreplace $args 0 0]
+            }
 	    -qlst {
 		set isqlst yes
 		# q_lst2
@@ -919,6 +924,47 @@ proc pf::thdFit {pfid aMin aMax args} {
     set sigmaD_fitLst [list]
     set h_fitLst [list]
     set sigmah_fitLst [list]
+    if {$isESS == "yes"} {
+	mylassign {a_min a_max} [GetRange 0 $aMin $aMax $rangeLst]
+	mylassign {a_minH a_maxH} [GetRange 0 $aMinH $aMaxH $rangeLst]
+        mylassign {D0 b sigD0} [sfit ${name}_D0p00 $a_min $a_max]
+        mylassign {h0 b sigh0} [sfit ${name}_h0p00 $a_minH $a_maxH]
+        set Dxdata [sgetlst ${name}_D0p00 -y]
+        set hxdata [sgetlst ${name}_h0p00 -y]
+        set a_lst [sgetlst ${name}_h0p00 -x]
+        set size [ssize ${name}_D0p00]
+        set hrange {}
+        set Drange {}
+        for {set i 0} {$i < $size} {incr i} {
+           set a2 [lindex $a_lst $i]
+           if {$a2 >= $a_min && $a2 <= $a_max} {
+              lappend Drange [lindex [sget ${name}_D0p00 $i] 0]
+           }
+           if {$a2 >= $a_minH && $a2 <= $a_maxH} {
+              lappend hrange [lindex [sget ${name}_h0p00 $i] 0]
+           }
+        }
+        set D_min [lindex $Drange 0]
+        set D_max [lindex $Drange end]
+        set h_min [lindex $hrange 0]
+        set h_max [lindex $hrange end]
+        foreach D $Drange {
+              if {$D < $D_min} {
+                  set D_min $D
+              }
+              if {$D > $D_max} {
+                  set D_max $D
+              }
+        }
+        foreach h $hrange {
+              if {$h < $h_min} {
+                  set h_min $h
+              }
+              if {$h > $h_max} {
+                  set h_max $h
+              }
+        }
+    }
     foreach q $q_lst {
 	set q_str [get_q_str $q]
 	
@@ -931,14 +977,34 @@ proc pf::thdFit {pfid aMin aMax args} {
 
 	lappend Z_fitLst $a
 	lappend sigmaZ_fitLst $sigA
+        if {$isESS == "no"} {
 
-	mylassign {a b sigA} [sfit ${name}_D$q_str $a_min $a_max]
-	lappend D_fitLst $a
-	lappend sigmaD_fitLst $sigA
-	#echo toto
-	mylassign {a b sigA} [sfit ${name}_h$q_str $a_minH $a_maxH]
-	lappend h_fitLst $a
-	lappend sigmah_fitLst $sigA
+	    mylassign {a b sigA} [sfit ${name}_D$q_str $a_min $a_max]
+	    lappend D_fitLst $a
+	    lappend sigmaD_fitLst $sigA
+	    #echo toto
+	    mylassign {a b sigA} [sfit ${name}_h$q_str $a_minH $a_maxH]
+	    lappend h_fitLst $a
+	    lappend sigmah_fitLst $sigA
+        } else {
+            if {$q_str == "0p00"} {
+               lappend D_fitLst $D0
+               lappend sigmaD_fitLst $sigD0
+               lappend h_fitLst $h0
+               lappend sigmah_fitLst $sigh0
+            } else {
+               set Dydata [sgetlst ${name}_D$q_str -y]
+	       screate tmp 0 1 $Dydata -xy $Dxdata 
+	       mylassign {a b sigA} [sfit tmp $D_min $D_max]
+	       lappend D_fitLst [expr {$a * $D0}]
+	       lappend sigmaD_fitLst $sigA
+               set hydata [sgetlst ${name}_h$q_str -y]
+               screate tmp 0 1 $hydata -xy $hxdata 
+	       mylassign {a b sigA} [sfit tmp $h_min $h_max]
+	       lappend h_fitLst [expr {$a * $h0}]
+	       lappend sigmah_fitLst $sigA
+            }
+        }
     }
     if {$isOnlyerror == "no"} {
 	screate ${name}_tq 0 1 $Z_fitLst -xy $q_lst
@@ -2977,11 +3043,11 @@ proc pf::OnePf_tsallis {pfid sourceBaseName mathExpr1 mathExpr2 fctName args} {
 #
 # modified by pierre kestener on 21 mar 2001
 # option -tsallis
-# abandoned !
+# abandonned !
 #
 # modified by pierre kestener on 07 nov 2001
 # option -turbulence
-# abandoned !
+# abandonned !
 #
 # modified by PK (21/04/2006)
 # option -mask [I]
