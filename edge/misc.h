@@ -101,7 +101,7 @@ void GradientModulus3D( float *gradient_modulus, /* result buffer */
  * \param[in,out] derivative_along_X1
  * \param[in,out] derivative_along_Y1
  * \param[in] derivative_along_X2
- * \param[in] derivative_along_Y1
+ * \param[in] derivative_along_Y2
  * \param[in] type (a valid value is taken from enum SVD_TYPE)
  *
  * Take care that derivative_along_X1, derivative_along_Y1 are modified
@@ -146,6 +146,28 @@ void GradientModulus2D_tensor2D_LT( float *derivative_along_X1,
 /* 			    fftw_real *derivative_along_Y2, */
 /* 			    int length); */
 
+/**
+ * Compute the tensor wavelet transform (modulus, argument)
+ * from the components of the WT tensor in 3D.
+ * 
+ * \param[out] gradient_modulus
+ * \param[out] gradient_argument
+ * \param[in,out] derivative_along_X1
+ * \param[in,out] derivative_along_Y1
+ * \param[in,out] derivative_along_Z1
+ * \param[in] derivative_along_X2
+ * \param[in] derivative_along_Y2
+ * \param[in] derivative_along_Z2
+ * \param[in] derivative_along_X3
+ * \param[in] derivative_along_Y3
+ * \param[in] derivative_along_Z3
+ * \param[in] type (a valid value is taken from enum SVD_TYPE)
+ *
+ * Take care that derivative_along_X1, derivative_along_Y1 and
+ * derivative_along_Z1 are modified by this routine; 
+ * they will contains the WT vector (direction of the largest/smallest 
+ * singular value).
+ */
 void GradientModulus3D_tensor3D( float *gradient_modulus,
 				 float *derivative_along_X1,
 				 float *derivative_along_Y1,

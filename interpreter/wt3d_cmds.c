@@ -3963,6 +3963,8 @@ w3_wtmm3d_TclCmd_(ClientData clientData,
     "JJJsfss",
     "-vector", "JJJJJJ",
     "-svdtype", "d",
+    "-svd_LT", "ss",
+    "-svd_LT_max", "ss",
     NULL
   };
   
@@ -3986,8 +3988,13 @@ w3_wtmm3d_TclCmd_(ClientData clientData,
      "                    field. User must provide (gradX2, gradY2, gradZ2)\n"
      "                    and (gradX3, gradY3, gradZ3) images for the second\n"
      "                    and thrid components of the vector field.\n"
-     "  -svdtype [d]: argument must be 0 or 1. Allow to select min/max svd\n"
+     "  -svdtype [d]: argument must be 0 or 1. Allow to select max/min svd\n"
      "                value\n"
+     "                SVD_TYPE_MAX(=0) means get max value + associated direction\n"
+     "                SVD_TYPE_MIN(=1) means get min value + associated direction\n"
+     "  -svd_LT [ss]: also output the longitudinal/transversal information (2 strings required\n"
+     "                for the names of the additional images\n"
+     "  -svd_LT_max [ss]: if this option is present, we also output maxima chains, with modL/modT values\n"
      "\n"
      "Return value:\n"
      "  None.\n"
@@ -4003,11 +4010,15 @@ w3_wtmm3d_TclCmd_(ClientData clientData,
   /* Options's presence */
   int isVector;
   int isSvdType;
-  
-  /* Options's parameters */
-  Image3D    *gradx2, *grady2, *gradz2, *gradx3, *grady3, *gradz3;
-  int         svdtype=1; /* 1->max and 0->min */
+  int isSvd_LT;
+  int isSvd_LT_max;
 
+  /* Options's parameters */
+  Image3D  *gradx2, *grady2, *gradz2, *gradx3, *grady3, *gradz3;
+  int       svdtype = SVD_TYPE_MAX;
+  char     *modName_L, *modName_T;
+  char     *modName_ext_L, *modName_ext_T;
+  
   /* Other variables */
   ExtImage3Dsmall *extImage, *extImage2;
   Extremum3Dsmall *extremum, *extremum2;
@@ -4017,8 +4028,15 @@ w3_wtmm3d_TclCmd_(ClientData clientData,
   int nb_of_maxima=0;
   int nb_of_local_maxima=0;
 
+  // Regular Wavelet Transform vector
   Image3D *Mod;
   float *mod,*max;
+
+  // longitudinal / transversal information
+  Image3D *ModL, *ModT;
+  float   *modL, *modT;
+  ExtImage3Dsmall *extImage_modL;
+  ExtImage3Dsmall *extImage_modT;
 
   unsigned char *bufferPos;
 
@@ -4027,7 +4045,8 @@ w3_wtmm3d_TclCmd_(ClientData clientData,
     return TCL_OK;
   }
   
-  if (arg_get (0, &gradx, &grady, &gradz, &extImageName, &scale, &modName, &extImageName2)==TCL_ERROR) {
+  if (arg_get (0, &gradx, &grady, &gradz,
+	       &extImageName, &scale, &modName, &extImageName2)==TCL_ERROR) {
     return TCL_ERROR;
   }
 
@@ -4045,30 +4064,60 @@ w3_wtmm3d_TclCmd_(ClientData clientData,
     }
   }
 
+  isSvd_LT = arg_present(3);
+  if (isSvd_LT) {
+    if (arg_get(3, &modName_L, &modName_T) == TCL_ERROR) {
+      return TCL_ERROR;
+    }
+  }
+  
+  isSvd_LT_max = arg_present(4);
+  if (isSvd_LT_max) {
+    if (arg_get(4, &modName_ext_L, &modName_ext_T) == TCL_ERROR) {
+      return TCL_ERROR;
+    }
+    
+    if (!isSvd_LT) {
+      return GenErrorAppend(interp,"Option svd_LT_max cannot be used if svd_LT is not acitvated (longitudinal/tranversal information must have been computed)",
+			    NULL);
+    }
+  }
+  
   /* Parameters validity and initialisation */
-  if ((gradx->lx != grady->lx) || (gradx->ly != grady->ly) || (gradx->lz != grady->lz)) {
+  if ((gradx->lx != grady->lx) ||
+      (gradx->ly != grady->ly) ||
+      (gradx->lz != grady->lz)) {
     Tcl_AppendResult(interp, "Inputs must have the same sizes!!!.", NULL);
     return TCL_ERROR;
   }
-  if ((gradx->lx != gradz->lx) || (gradx->ly != gradz->ly) || (gradx->lz != gradz->lz)) {
+  if ((gradx->lx != gradz->lx) ||
+      (gradx->ly != gradz->ly) ||
+      (gradx->lz != gradz->lz)) {
     Tcl_AppendResult(interp, "Inputs must have the same sizes!!!.", NULL);
     return TCL_ERROR;
   }
-  if ((gradx->type != PHYSICAL) || (grady->type != PHYSICAL) || (gradz->type != PHYSICAL)) {
+  if ((gradx->type != PHYSICAL) ||
+      (grady->type != PHYSICAL) ||
+      (gradz->type != PHYSICAL)) {
     Tcl_AppendResult(interp, "Inputs must have a PHYSICAL type!!!.", NULL);
     return TCL_ERROR;
   }
 
   if (isVector) {
-    if ((gradx2->lx != grady2->lx) || (gradx2->ly != grady2->ly) || (gradx2->lz != grady2->lz)) {
+    if ((gradx2->lx != grady2->lx) ||
+	(gradx2->ly != grady2->ly) ||
+	(gradx2->lz != grady2->lz)) {
       Tcl_AppendResult(interp, "Inputs2 must have the same sizes!!!.", NULL);
       return TCL_ERROR;
     }
-    if ((gradx->lx != gradx2->lx) || (grady->ly != grady2->ly)|| (gradz->ly != gradz2->ly)) {
+    if ((gradx->lx != gradx2->lx) ||
+	(grady->ly != grady2->ly)||
+	(gradz->ly != gradz2->ly)) {
       Tcl_AppendResult(interp, "All image inputs must have the same sizes!!!.", NULL);
       return TCL_ERROR;
     }
-    if ((gradx2->type != PHYSICAL) || (grady2->type != PHYSICAL)) {
+    if ((gradx2->type != PHYSICAL) ||
+	(grady2->type != PHYSICAL)) {
       Tcl_AppendResult(interp, "Inputs2 must have a PHYSICAL type!!!.", NULL);
       return TCL_ERROR;
     }
@@ -4094,13 +4143,39 @@ w3_wtmm3d_TclCmd_(ClientData clientData,
   /* fill pos_incr array with neighbour positions */
   init_pos_incr (lx,ly);
 
+  if (isSvd_LT) {
+    ModL = im3D_new (gradx->lx, gradx->ly, gradx->lz, gradx->size, gradx->type);
+    ModT = im3D_new (gradx->lx, gradx->ly, gradx->lz, gradx->size, gradx->type);
+    if ((!ModL) || (!ModT))
+      return TCL_ERROR;
+    modL = ModL->data;
+    modT = ModT->data;
+  }
+  
   /* Treatement */
   smSetBeginTime();
 
   if (isVector) {
-    Extract_Gradient_Maxima_3D_vectorfield( gradx, grady, gradz, gradx2, grady2, gradz2, gradx3, grady3, gradz3, mod, max, scale, svdtype);
+
+    // Extract Longitudinal / Transversal information
+    // gradx,grady,gradz are not modified by this
+    // modL / modT are output
+    if (isSvd_LT) { 
+      Extract_Gradient_Maxima_3D_vectorfield_LT( gradx,  grady,  gradz,
+						 gradx2, grady2, gradz2,
+						 gradx3, grady3, gradz3,
+						 modL, modT);
+    }
+
+    // gradx,grady, gradz will be modified after this function call
+    Extract_Gradient_Maxima_3D_vectorfield( gradx,  grady,  gradz,
+					    gradx2, grady2, gradz2,
+					    gradx3, grady3, gradz3,
+					    mod, max, scale, svdtype);
   } else {
+    
     Extract_Gradient_Maxima_3D( gradx, grady, gradz, mod, max, scale);
+    
   }
   
   /* compute nb of maxima (used for memory allocation) */
@@ -4142,6 +4217,22 @@ w3_wtmm3d_TclCmd_(ClientData clientData,
   if (!extImage2) {
     return GenErrorMemoryAlloc(interp);
   }
+
+  // if isSvd_LT_max is true, we also save ext-image containing
+  // Longitudinal / Transversal wavelet values
+  if (isSvd_LT_max) {
+    
+    extImage_modL = w3_ext_small_new (nb_of_local_maxima, lx, ly, lz, scale);
+    extImage_modT = w3_ext_small_new (nb_of_local_maxima, lx, ly, lz, scale);
+
+    if (!extImage_modL) {
+      return GenErrorMemoryAlloc(interp);
+    }
+    if (!extImage_modT) {
+      return GenErrorMemoryAlloc(interp);
+    }
+
+  }
   
   /*
    * Update ExtImage and Extimage2 structures.
@@ -4149,8 +4240,8 @@ w3_wtmm3d_TclCmd_(ClientData clientData,
   extremum  = extImage->extr;
   extremum2 = extImage2->extr;
   {
-    float *tmpMod = (float *) mod;
-    float *tmpMax = (float *) max;
+    float *tmpMod  = (float *) mod;
+    float *tmpMax  = (float *) max;
     float *tmpMax2 = (float *) max;
     unsigned char *tmpPos = (unsigned char *) bufferPos;
     int i;
@@ -4171,12 +4262,55 @@ w3_wtmm3d_TclCmd_(ClientData clientData,
     }
   }
 
+  // update Longitudinal / Transversal extImage
+  if (isSvd_LT_max) {
+
+    Extremum3Dsmall *extremumL, *extremumT;
+
+    extremumL = extImage_modL->extr;
+    extremumT = extImage_modT->extr;
+    
+    float *tmpModL = (float *) modL;
+    float *tmpModT = (float *) modT;
+    float *tmpMax  = (float *) max;
+    float *tmpMax2 = (float *) max;
+    unsigned char *tmpPos = (unsigned char *) bufferPos;
+    int i;
+
+    for (i = 0; i < lx*ly*lz; i++, tmpModL++, tmpModT++, tmpMax++) {
+      if (*tmpMax>0) {
+	if (_is_max_(tmpMax2,tmpPos,i,lx,ly,lz)) /* this extrema is a maxima */
+	  {
+	    extremumL->mod = *tmpModL;
+	    extremumT->mod = *tmpModT;
+
+	    extremumL->pos = i;
+	    extremumT->pos = i;
+
+	    extremumL++;
+	    extremumT++;
+	  }
+      }
+    }
+    
+  } // end of isSvd_LT_max
+  
   smSetEndTime();
 
   Ext3DsmallDicStore(extImageName, extImage);
   Ext3DsmallDicStore(extImageName2, extImage2);
   store_image3D(modName,Mod);
-  
+
+  if (isSvd_LT) {
+    store_image3D(modName_L, ModL);
+    store_image3D(modName_T, ModT);
+  }
+
+  if (isSvd_LT_max) {
+    Ext3DsmallDicStore(modName_ext_L, extImage_modL);
+    Ext3DsmallDicStore(modName_ext_T, extImage_modT);
+  }
+
   sprintf(interp->result, "%f", smGetEllapseTime());
   
   free(max);

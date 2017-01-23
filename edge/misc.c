@@ -14,7 +14,23 @@ float MAX3(float a0, float a1, float a2) {
   returnVal = ( a2 > returnVal) ? a2 : returnVal;
 
   return returnVal;
+
 } // MAX3
+
+static inline
+float MAX6(float a0, float a1, float a2,
+	   float a3, float a4, float a5) {
+  
+  float returnVal = a0;
+  returnVal = ( a1 > returnVal) ? a1 : returnVal;
+  returnVal = ( a2 > returnVal) ? a2 : returnVal;
+  returnVal = ( a3 > returnVal) ? a3 : returnVal;
+  returnVal = ( a4 > returnVal) ? a4 : returnVal;
+  returnVal = ( a5 > returnVal) ? a5 : returnVal;
+
+  return returnVal;
+  
+} // MAX6
 
 /* Compute the gradient modulus in 2-D.
  *
@@ -183,7 +199,7 @@ void GradientModulus2D_tensor2D_LT( float *derivative_along_X1,
     modL[i] = MAX3( fabs(gx1), fabs(gy2), 0.5*fabs(gx2 + gy1) );
     
     // max of anti-symetric tensor part
-    modT[i] = fabs( gx2-gy1 );
+    modT[i] = 0.5 * fabs( gx2-gy1 );
 
   }
   
@@ -430,7 +446,7 @@ void GradientModulus3D_tensor3D( float *gradient_modulus,
        wt_tensor(old) = wt_tensor * W * V' */
 
     /* find max_vp = spectral radius ! */
-    if (type == 1) {
+    if (type == SVD_TYPE_MAX) {
       if (w[0]>w[1]) {
 	*norme = w[0];
 	index_max_vp = 0;
@@ -450,7 +466,7 @@ void GradientModulus3D_tensor3D( float *gradient_modulus,
 	min =w[2];
 	index_min_vp = 2;
       }
-    } else {
+    } else if (type == SVD_TYPE_MIN) {
       if (w[0]<w[1]) {
 	*norme = w[0];
 	index_max_vp = 0;
@@ -500,7 +516,50 @@ void GradientModulus3D_tensor3D( float *gradient_modulus,
     free(rv1);
   }
 
-}
+} // GradientModulus3D_tensor3D
+
+void GradientModulus3D_tensor3D_LT( float *derivative_along_X1,
+				    float *derivative_along_Y1,
+				    float *derivative_along_Z1,
+				    float *derivative_along_X2,
+				    float *derivative_along_Y2,
+				    float *derivative_along_Z2,
+				    float *derivative_along_X3,
+				    float *derivative_along_Y3,
+				    float *derivative_along_Z3,
+				    int length,
+				    float *modL,
+				    float *modT)
+{
+
+  int i;
+
+  for ( i=0; i<length; i++) {
+    
+    float gx1 = derivative_along_X1[i];
+    float gy1 = derivative_along_Y1[i];
+    float gz1 = derivative_along_Z1[i];
+
+    float gx2 = derivative_along_X2[i];
+    float gy2 = derivative_along_Y2[i];
+    float gz2 = derivative_along_Z2[i];
+
+    float gx3 = derivative_along_X3[i];
+    float gy3 = derivative_along_Y3[i];
+    float gz3 = derivative_along_Z3[i];
+    
+    // max of symetric tensor part
+    modL[i] = MAX6( fabs(gx1), fabs(gy2), fabs(gz3),
+		    0.5*fabs(gx2 + gy1),
+		    0.5*fabs(gy3 + gz2),
+		    0.5*fabs(gz1 + gx3) );
+    
+    // max of anti-symetric tensor part
+    modT[i] = 0.5 * MAX3( fabs( gx2-gy1 ), fabs( gy3-gz2 ), fabs( gz1-gx3 ) );
+
+  }
+  
+} // GradientModulus3D_tensor3D_LT
 
 
 /* void GradientModulus3D_tensor3D_vector( fftw_real *derivative_along_X1, */

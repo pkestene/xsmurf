@@ -561,3 +561,55 @@ int Extract_Gradient_Maxima_3D_vectorfield( Image3D *GradX1,
   return( EXIT_ON_SUCCESS );
   
 }
+
+int Extract_Gradient_Maxima_3D_vectorfield_LT( Image3D *GradX1,
+					       Image3D *GradY1,
+					       Image3D *GradZ1,
+					       Image3D *GradX2,
+					       Image3D *GradY2,
+					       Image3D *GradZ2,
+					       Image3D *GradX3,
+					       Image3D *GradY3,
+					       Image3D *GradZ3,
+					       float *modL,
+					       float *modT)
+{
+  char *proc="Extract_Gradient_Maxima_3D_vectorfield_LT";
+
+  /*
+   * Pointers
+   */
+  float *gx1 = GradX1->data;
+  float *gx2 = GradX2->data;
+  float *gx3 = GradX3->data;
+
+  float *gy1 = GradY1->data;
+  float *gy2 = GradY2->data;
+  float *gy3 = GradY3->data;
+
+  float *gz1 = GradZ1->data;
+  float *gz2 = GradZ2->data;
+  float *gz3 = GradZ3->data;
+
+  int size;
+  int lx,ly,lz;
+ 
+  lx = GradX1->lx;
+  ly = GradX1->ly;
+  lz = GradX1->lz;
+  
+  size  = lx * ly * lz;
+
+  /*
+   * Modulus and argument of the gradient vector (obtained by the SVD
+   * of the gradient tensor). This DOES NOT modify gx1, gy1.
+   */ 
+  GradientModulus3D_tensor3D_LT( gx1, gy1, gz1,
+				 gx2, gy2, gz2,
+				 gx3, gy3, gz3,
+				 size,
+				 modL, modT);
+  
+  return( EXIT_ON_SUCCESS );
+
+} // Extract_Gradient_Maxima_3D_vectorfield_LT
