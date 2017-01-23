@@ -109,7 +109,7 @@ void GradientModulus2D_tensor2D( float *gradient_modulus,
       index_max_vp = 1;
       }
     */
-    if (type == 1) {
+    if (type == SVD_TYPE_MAX) {
       if (w[0]>w[1]) {
 	*norme = w[0];
 	index_max_vp = 0;
@@ -117,7 +117,7 @@ void GradientModulus2D_tensor2D( float *gradient_modulus,
 	*norme = w[1];
 	index_max_vp = 1;
       }
-    } else {
+    } else if (type == SVD_TYPE_MIN) {
       if (w[0]<w[1]) {
 	*norme = w[0];
 	index_max_vp = 0;

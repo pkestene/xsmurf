@@ -5480,8 +5480,11 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
      "  -vector [II]: extract contour lines of a 2D -> 2D vector field.\n"
      "                user must provide (gradX, gradY) image of the second\n"
      "                component of the vector field.\n"
-     "  -svdtype [d]: argument must be 0 or 1. Allow to select max/min svd\n"
-     "                value\n"
+     "  -svdtype [d]: argument must be 0, 1, 2 or 3.\n"
+     "                SVD_TYPE_MAX(=0) means get max value + associated direction\n"
+     "                SVD_TYPE_MIN(=1) means get min value + associated direction\n"
+     "                SVD_TYPE_MAX_L(=2) means get max SVD direction with max of symetric WT tensor (kind of longitudinal increments)\n"
+     "                SVD_TYPE_MAX_T(=3) means get max SVD direction with max of anti-symetric WT tensor (kind of transverse increments)\n"
      "\n"
      "Return value:\n"
      "  None.\n"
@@ -5500,7 +5503,7 @@ w2_wtmm2d_TclCmd_(ClientData clientData,
   
   /* Options's parameters */
   Image    *gradx2, *grady2;
-  int       svdtype=1; /* 1->max and 0->min */
+  int       svdtype = SVD_TYPE_MAX;
 
   /* Other variables */
   ExtImage *extImage;

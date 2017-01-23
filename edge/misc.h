@@ -20,6 +20,28 @@
 #define SIGN(a, b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
 #define MAX(x,y) ((x)>(y)?(x):(y))
 
+/**
+ * This enum is used to trigger different behavior when computing 
+ * the tensor wavelet transform.
+ *
+ * SVD_TYPE_MAX means we keep the modulus,direction associated to 
+ *              the largest singular value
+ * SVD_TYPE_MIN means we keep the modulus,direction associated to 
+ *              the smallest singular value
+ * SVD_TYPE_MAX_L means we keep the direction associated to 
+ *                the largest singular value and modulus is max of the symetric
+ *                part of the wavelet tensor
+ * SVD_TYPE_MAX_T means we keep the direction associated to 
+ *                the largest singular value and modulus is max of the antisymetric
+ *                part of the wavelet tensor
+ */
+enum {
+  SVD_TYPE_MAX = 0,
+  SVD_TYPE_MIN = 1,
+  SVD_TYPE_MAX_L = 2,
+  SVD_TYPE_MAX_T = 3
+};
+
 /* Compute the gradient modulus in 2-D. 
  * 
  * gradient_modulus = sqrt ( 
@@ -70,6 +92,18 @@ void GradientModulus3D( float *gradient_modulus, /* result buffer */
 /* 			  int length, */
 /* 			  int type); */
 
+/**
+ * Compute the tensor wavelet transform (modulus, argument)
+ * from the components of the WT tensor
+ * 
+ * \param[out] gradient_modulus
+ * \param[out] gradient_argument
+ * \param[in] derivative_along_X1
+ * \param[in] derivative_along_Y1
+ * \param[in] derivative_along_X2
+ * \param[in] derivative_along_Y1
+ * \param[in] type (a valid value is taken from enum SVD_TYPE)
+ */
 void GradientModulus2D_tensor2D( float *gradient_modulus,
 				 float *gradient_argument,
 				 float *derivative_along_X1,
