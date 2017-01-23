@@ -67,7 +67,7 @@ ifftw2d grady2
 # compute WTMM edges at scale $scale
 wtmm2d gradx1 grady1 result $scale mod arg -vector gradx2 grady2
 
-# display edges
+# display WT edges
 eaff result
 
 # display background

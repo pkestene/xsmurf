@@ -4,7 +4,7 @@
 # This is a small script that shows
 # how to use several xsmurf commands
 # related to WTMM2D for vector fields
-# with longitudinal / trnasversal information
+# with longitudinal / transversal information
 #
 # You just have to source this script
 # in the xsmurf console
