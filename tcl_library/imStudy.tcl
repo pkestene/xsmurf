@@ -1043,7 +1043,8 @@ proc imStudy::SeekSave {imLst pos length} {
 #   -3d : interpreter input image as a Image3D data structure and compute
 #         the wtmm edges (surfaces)
 #   -vector3d [string string] : compute the wtmm edges of a 3d vector field
-#
+#   -lt : this option used together with -vector2d or -vector3d will generated
+#         longitudinal / transversal information
 #
 # Return value :
 #   List of names of the new (ext) images : modulus image, argument image and
@@ -1081,6 +1082,7 @@ proc imStudy::WtmmgCurrentScale {ftPath args} {
     set isVector2d 0
     set is3d 0
     set isVector3d 0
+    set islt 0
     
     # Arguments analysis
     set oldArgs $args
@@ -1100,7 +1102,11 @@ proc imStudy::WtmmgCurrentScale {ftPath args} {
 		set ftPath2 [lindex $args 1]
 		set ftPath3 [lindex $args 2]
 		set args [lreplace $args 0 2]
-	    }	    
+	    }
+	    -lt {
+		set islt 1
+		set args [lreplace $args 0 0]
+	    }
 	    default {
 		return -code error "unknown option \"[lindex $args 0]\""
 	    }
@@ -1237,7 +1243,11 @@ proc imStudy::WtmmgCurrentScale {ftPath args} {
 	    #logMsg "computing WTMM lines with non-maxima suppression routine"
 	    if {$isVector2d == 1} {
 		# vector 2d
-		wtmm2d dx1 dy1 max${scaleIdF} $scale mod$scaleIdF arg$scaleIdF -vector dx2 dy2
+		if {$islt == 1} {
+		    ###### TODO #####
+		} else {
+		    wtmm2d dx1 dy1 max${scaleIdF} $scale mod$scaleIdF arg$scaleIdF -vector dx2 dy2
+		}
 	    } elseif {$isVector3d == 1} {
 		# vector 3d
 		wtmm3d dx1 dy1 dz1 max${scaleIdF} $scale mod$scaleIdF mmax$scaleIdF -vector dx2 dy2 dz2 dx3 dy3 dz3
