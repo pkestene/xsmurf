@@ -84,6 +84,7 @@ namespace eval imStudy {
 	images_lst     {none \
 		{{-list -int}} "List of ID numbers (integer) of images used by foreachImage."}
 	nThreads       {1 -posint    "Number of threads for fftw computations (only used when xsmurf is linked against the multi-threaded fftw lib.)."}
+	isLT           {0 -boolean   "Flag which triggers the output of longitudinal/transversal information (only available for vector2d/vector3d WT)."}
     }
 
     # Some constants.
@@ -1069,6 +1070,7 @@ proc imStudy::WtmmgCurrentScale {ftPath args} {
     variable imagePath
     variable cv2dPath
     variable baseDir
+    variable isLT
 
     variable studyId
     if {$studyId == "none"} {
@@ -1082,7 +1084,6 @@ proc imStudy::WtmmgCurrentScale {ftPath args} {
     set isVector2d 0
     set is3d 0
     set isVector3d 0
-    set islt 0
     
     # Arguments analysis
     set oldArgs $args
@@ -1102,10 +1103,6 @@ proc imStudy::WtmmgCurrentScale {ftPath args} {
 		set ftPath2 [lindex $args 1]
 		set ftPath3 [lindex $args 2]
 		set args [lreplace $args 0 2]
-	    }
-	    -lt {
-		set islt 1
-		set args [lreplace $args 0 0]
 	    }
 	    default {
 		return -code error "unknown option \"[lindex $args 0]\""
@@ -1207,7 +1204,7 @@ proc imStudy::WtmmgCurrentScale {ftPath args} {
 			    ConvolOneScale $ftPath dxyy	$scale $mexicanDef(dxyy,r)	$mexicanDef(dxyy,i)
 			    ConvolOneScale $ftPath dyyy	$scale $mexicanDef(dyyy,r)	$mexicanDef(dyyy,i)
 			}
-		}
+		    }
 		} else {
 		    # the following is old and probably not working...
 		    # to be removed ???
@@ -1243,14 +1240,19 @@ proc imStudy::WtmmgCurrentScale {ftPath args} {
 	    #logMsg "computing WTMM lines with non-maxima suppression routine"
 	    if {$isVector2d == 1} {
 		# vector 2d
-		if {$islt == 1} {
-		    ###### TODO #####
+		if {$isLT} {
+		    wtmm2d dx1 dy1 max${scaleIdF} $scale mod$scaleIdF arg$scaleIdF -vector dx2 dy2 -svd_LT modL$scaleIdF modT$scaleIdF -svd_LT_max maxL$scaleIdF maxT$scaleIdF
 		} else {
 		    wtmm2d dx1 dy1 max${scaleIdF} $scale mod$scaleIdF arg$scaleIdF -vector dx2 dy2
 		}
 	    } elseif {$isVector3d == 1} {
-		# vector 3d
-		wtmm3d dx1 dy1 dz1 max${scaleIdF} $scale mod$scaleIdF mmax$scaleIdF -vector dx2 dy2 dz2 dx3 dy3 dz3
+		if {$isLT} {
+		    # vector 3d with longitudinal/transversal information
+		    wtmm3d dx1 dy1 dz1 max${scaleIdF} $scale mod$scaleIdF mmax$scaleIdF -vector dx2 dy2 dz2 dx3 dy3 dz3 -svd_LT modL$scaleIdF modT$scaleIdF -svd_LT_max mmaxL$scaleIdF mmaxT$scaleIdF
+		} else {
+		    # vector 3d
+		    wtmm3d dx1 dy1 dz1 max${scaleIdF} $scale mod$scaleIdF mmax$scaleIdF -vector dx2 dy2 dz2 dx3 dy3 dz3
+		}
 	    } elseif {$is3d == 1} {
 		# scalar 3d
 		wtmm3d dx dy dz max${scaleIdF} $scale mod$scaleIdF mmax$scaleIdF
@@ -1366,9 +1368,17 @@ proc imStudy::WtmmgCurrentScale {ftPath args} {
     }
 
     if {$is3d == 1 || $isVector3d} {
-	return [list mod${scaleIdF} max$scaleIdF mmax$scaleIdF]
+	if {$isLT} {
+	    return [list mod${scaleIdF} max${scaleIdF} mmax$scaleIdF mmaxL$scaleIdF mmaxT$scaleIdF]
+	} else {
+	    return [list mod${scaleIdF} max$scaleIdF mmax$scaleIdF]
+	}
     } else {
-	return [list mod${scaleIdF} arg${scaleIdF} max$scaleIdF]
+	if {$isLT} {
+	    return [list mod${scaleIdF} arg${scaleIdF} max$scaleIdF maxL$scaleIdF maxT$scaleIdF]
+	} else {
+	    return [list mod${scaleIdF} arg${scaleIdF} max$scaleIdF]
+	}
     }
 }
 
@@ -1470,7 +1480,7 @@ proc imStudy::wtmmg {args} {
     variable useDiskSwap
     variable inMemory
     variable nThreads
-
+    
     variable imageName
 
     variable studyId
@@ -1614,7 +1624,8 @@ proc imStudy::wtmmg2d_vector {args} {
     variable useFftw
     variable useDiskSwap
     variable nThreads
-
+    variable isLT
+    
     variable studyId
     if {$studyId == "none"} {
 	return -code error "no current image study"
@@ -1682,6 +1693,10 @@ proc imStudy::wtmmg2d_vector {args} {
 	    set modId [lindex $result 0]
 	    set argId [lindex $result 1]
 	    set maxId [lindex $result 2]
+	    if {$isLT} {
+		set maxLid [lindex $result 3]
+		set maxTid [lindex $result 4]
+	    }
 	    set code [catch {uplevel $script} result]
 	}
     }
@@ -1819,7 +1834,8 @@ proc imStudy::wtmmg3d_vector {args} {
     variable useFftw
     variable useDiskSwap
     variable nThreads
-
+    variable isLT
+    
     variable studyId
     if {$studyId == "none"} {
 	return -code error "no current image study"
@@ -1889,6 +1905,10 @@ proc imStudy::wtmmg3d_vector {args} {
 	    set modId [lindex $result 0]
 	    set argId [lindex $result 1]
 	    set maxId [lindex $result 2]
+	    if {$isLT} {
+		set maxLid [lindex $result 3]
+		set maxTid [lindex $result 4]
+	    }
 	    set code [catch {uplevel $script} result]
 	}
     }
