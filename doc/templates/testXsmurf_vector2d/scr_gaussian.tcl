@@ -38,6 +38,12 @@ set theScr {
 		    
 	    delete mod$scaleIdF
 	    delete arg$scaleIdF
+
+	    if {$isLT} {
+		esave maxL$scaleIdF ${baseDir}/${imaIdf1}_${imaIdf2}_${type}_max_${wavelet}/maxL$scaleIdF
+		esave maxT$scaleIdF ${baseDir}/${imaIdf1}_${imaIdf2}_${type}_max_${wavelet}/maxT$scaleIdF
+	    }
+
 	}
 	dputs "End wtmm."
 	
