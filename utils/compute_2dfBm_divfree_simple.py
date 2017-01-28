@@ -1,0 +1,358 @@
+#!/usr/bin/env python
+
+"""
+Generate 2d fractional Brownian vector fields (fBm) as two numpy arrays.
+Provide a routine to save in either matlab or xsmurf file format.
+
+method 1: v = curl (Ax,Ay,Az)
+
+Ax,Ay,Az are 3 independent scalar fBm.
+v is divergence-free by design, but vx,vy,vz are very anisotropic.
+"""
+__author__ = "Pierre Kestener"
+__license__ = "GPL"
+
+# numerical packages
+import numpy as np
+
+# Fast Fourier Transform
+from scipy.fftpack import fft, ifft, fftn, ifftn
+
+def genFbm2d_scalar(nx,ny,h=0.5):
+    """
+    Generate 2D fBm scalar field (assume nx and ny are even)
+    
+    h : Holder exponent in [0, 1]
+    if h == 0.5 : regular    Brownian motion
+    if h != 0.5 : fractional Brownian motion
+    """
+    
+    # initialize Fourier coef
+    fftCoeff = np.zeros((nx,ny)).astype(complex) 
+
+    print fftCoeff.flags
+    print fftCoeff.shape
+    
+    # fill half Fourier, and the other half with complex conjugate
+    for i in range(nx):
+
+        # compute kx
+        kx = i
+        if i>nx/2:
+            kx = i - nx
+        
+        # compute i2 (central symmetry)
+        if (i==0):
+            i2=0
+        elif (i==nx/2):
+            i2=nx/2
+        else:
+            i2=nx-i
+
+        for j in range(ny/2+1):
+
+            # compute ky
+            ky = j
+
+            # compute j2 (central symmetry)
+            if (j==0):
+                j2=0
+            elif (j==ny/2):
+                j2=ny/2
+            else:
+                j2=ny-j
+
+            kSquare = 1.0*(kx**2+ky**2)
+            if kSquare>0:
+                radius = np.power(kSquare, -(2*h+2)/4) * np.random.normal()
+                phase = 2 * np.pi * np.random.uniform()
+            else:
+                radius = 1.0
+                phase  = 0.0
+
+            # fill fourier coefficient so that ifft is real (imag = 0)
+            fftCoeff[i ,j ] = radius*np.cos(phase) + 1j*radius*np.sin(phase)
+            fftCoeff[i2,j2] = radius*np.cos(phase) - 1j*radius*np.sin(phase)
+
+    # make sure that Fourier coef at i=0, j=ny/2 is real
+    fftCoeff[0,ny/2] = np.real(fftCoeff[0,ny/2]) + 1j*0
+
+    # make sure that Fourier coef at i=nx/2, j=0 is real
+    fftCoeff[nx/2,0] = np.real(fftCoeff[nx/2,0]) + 1j*0
+
+    # make sure that Fourier coef at i=nx/2, j=ny/2 is real
+    fftCoeff[nx/2,ny/2] = np.real(fftCoeff[nx/2,ny/2]) + 1j*0
+
+    return ifftn(fftCoeff)
+
+def genFbm3d_scalar(nx,ny,nz,h=0.5):
+    """
+    Create 3D fBm scalar field (assume nx, ny, nz are even)
+    
+    h : Holder exponent in [0, 1]
+    if h == 0.5 : regular    Brownian motion
+    if h != 0.5 : fractional Brownian motion
+    """
+    
+    # initialize Fourier coef
+    fftCoeff = np.zeros((nx,ny,nz)).astype(complex) 
+
+    # fill half Fourier space, and the other half using conplex conjugate
+    for i in range(nx):
+
+        # compute kx
+        kx = i
+        if i>nx/2:
+            kx = i - nx
+
+        # compute i2
+        if (i==0):
+            i2=0
+        elif (i==nx/2):
+            i2=nx/2
+        else:
+            i2=nx-i
+
+        for j in range(ny):
+
+            # compute ky
+            ky = j
+            if j>ny/2:
+                ky = j - ny
+
+            # compute j2
+            if (j==0):
+                j2=0
+            elif (j==ny/2):
+                j2=ny/2
+            else:
+                j2=ny-j
+
+            for k in range(nz/2+1):
+
+                # compute kz
+                kz = k
+
+                # compute k2
+                if (k==0):
+                    k2=0
+                elif (k==nz/2):
+                    k2=nz/2
+                else:
+                    k2=nz-k
+
+                kSquare = 1.0*(kx**2+ky**2+kz**2)
+                if kSquare>0:
+                    radius = np.power(kSquare, -(2*h+3)/4) * np.random.normal()
+                    phase = 2 * np.pi * np.random.uniform()
+                else:
+                    radius = 1.0
+                    phase  = 0.0 
+
+                # fill Fourier coef so that ifft is real
+                fftCoeff[i ,j ,k ] = radius*np.cos(phase) + 1j*radius*np.sin(phase)
+                fftCoeff[i2,j2,k2] = radius*np.cos(phase) - 1j*radius*np.sin(phase)
+
+    # enforce symmetries for a real valued field
+    # make sure that Fourier coef at i=nx/2 ... is real
+    fftCoeff[nx/2,0   ,0   ] = np.real(fftCoeff[nx/2,0   ,0   ]) + 1j*0
+    fftCoeff[0   ,ny/2,0   ] = np.real(fftCoeff[0   ,ny/2,0   ]) + 1j*0
+    fftCoeff[0   ,0   ,nz/2] = np.real(fftCoeff[0   ,0   ,nz/2]) + 1j*0
+
+    fftCoeff[nx/2,ny/2,0   ] = np.real(fftCoeff[nx/2,ny/2,0   ]) + 1j*0
+    fftCoeff[nx/2,0   ,nz/2] = np.real(fftCoeff[nx/2,0   ,nz/2]) + 1j*0
+    fftCoeff[0   ,ny/2,nz/2] = np.real(fftCoeff[0   ,ny/2,nz/2]) + 1j*0
+
+    fftCoeff[nx/2,ny/2,nz/2] = np.real(fftCoeff[nx/2,ny/2,nz/2]) + 1j*0
+
+    return ifftn(fftCoeff)
+
+def compute_div_free_2d(nx,ny,H):
+    """
+    Compute a 2d divergence-free (fractional Brownian motion) vector field.
+
+    Method:
+    1. compute scale field phi (fBm using h+1)
+    2. compute curl of phi*e_z
+
+    !! the vx,vy components generated by this formula are anisotropic, the actual
+    value of h depend on the direction: h and h+1.
+    Nevertheless, at every location the strongest singularity is of strength h.
+    """
+
+    # generate a scalar field fBm using h+1
+    phi = np.real(genFbm2d_scalar(nx,ny,h=H+1)) 
+    
+    # compute gradient
+    phi_x,phi_y = np.gradient(phi)
+
+    # divergence free fBm vector field computed as nabla ^ (phi e_z) 
+    vx =  phi_y
+    vy = -phi_x
+
+    return vx,vy    
+    
+def compute_div_free_3d(nx,ny,nz,H):
+    """
+    Compute a 3d divergence-free (fractional Brownian motion) vector field.
+
+    Method:
+    1. compute vector field Ax,Ay,Az (each is a fBm using h+1)
+    2. compute curl of (Ax,Ay,Az)
+    """
+
+    # generate a scalar field fBm using h+1
+    Ax = np.real(genFbm3d_scalar(nx,ny,nz,h=H+1))
+    Ay = np.real(genFbm3d_scalar(nx,ny,nz,h=H+1))
+    Az = np.real(genFbm3d_scalar(nx,ny,nz,h=H+1))
+
+    # compute gradient of each component
+    Axx,Axy,Axz = np.gradient(Ax)
+    Ayx,Ayy,Ayz = np.gradient(Ay)
+    Azx,Azy,Azz = np.gradient(Az)
+
+    # divergence free fBm vector field computed as nabla ^ (phi e_z) 
+    vx =  Azy - Ayz
+    vy =  Axz - Azx
+    vz =  Ayx - Axy
+
+    return vx,vy,vz
+    
+def saveMatlab(filename_prefix,data):
+    """
+    Save data array in a file using Matlab file format.
+    
+    filename_prefix (no .mat)
+    """
+
+    # import routine for matlab file format
+    import scipy.io as sio
+
+    # save data
+    sio.savemat(filename_prefix+'.mat', {filename_prefix:data})
+
+def saveXsm(filename_prefix,data):
+    """
+    Save numpy 2d data array using xsmurf file format.
+
+    Suffix .xsm will be added.
+    """
+
+    filename = filename_prefix + '.xsm'
+
+    # get data shape
+    nx,ny = data.shape
+
+    # open file
+    f = open(filename, 'w')
+
+    # write the one line xsmurf header
+    f.write("Binary 1 {0}x{1} {2}(4 byte reals)\n".format(nx,ny,nx*ny))
+    
+    # write heavy data
+    data.astype(np.float32).tofile(f)
+
+    # close file
+    f.close()
+
+def demo_plot(vx, vy):
+
+    import matplotlib.pyplot as plt
+    #Y,X = np.mgrid[0:nx, 0:ny]
+    x = np.linspace(0,nx-1,nx)
+    y = np.linspace(0,ny-1,ny)
+    X,Y = np.meshgrid(x, y, indexing='ij')
+    
+    # for colormap
+    v = np.sqrt(vx**2+vy**2)    
+
+    # compute divergence(vx,vy)
+    dxx,dxy=np.gradient(vx)
+    dyx,dyy=np.gradient(vy)
+    div_v = dxx+dyy
+
+    plt.subplot(221)
+    plt.imshow(vx)
+    plt.title('vx')
+
+    plt.subplot(222)
+    plt.imshow(vy)
+    plt.title('vy')
+
+    plt.subplot(223)
+    #plt.quiver(vx,vy,v)
+    plt.imshow(div_v)
+    plt.colorbar()
+    plt.title('div_v')
+    
+    plt.subplot(224)
+    #plt.streamplot(X,Y,vx,vy,color=v,density=1.5)
+    plt.streamplot(Y,X,vy,vx,color=v,density=1.5)
+    plt.colorbar()
+    plt.title('(vx,vy)')
+
+    plt.show()
+    
+
+def check_divergence(vx,vy):
+    """
+    Compute divergence of vector field (vx,vy) and plot
+    """
+
+    # check that wx,wy is really divergence-free
+    dxx,dxy=np.gradient(vx)
+    dyx,dyy=np.gradient(vy)
+
+    # dxx+dyy should zero everywhere
+    print("compute divergence")
+    import matplotlib.pyplot as plt
+    plt.imshow(dxx+dyy)
+    plt.colorbar()
+    plt.show()
+
+    
+#
+# main
+#
+if __name__ == '__main__':
+
+    # parse command line
+    from optparse import OptionParser
+
+    parser = OptionParser()
+    parser.add_option("-f", "--file", dest="filename",
+                      default="fBm",
+                      help="write output files with given prefix", metavar="FILE")
+    parser.add_option("-s", "--size", dest="size",
+                      default=64,
+                      help="linear size of 3D data", type="int")
+    parser.add_option("-H", "--hurst", dest="H",
+                      default=0.5,
+                      help="Hurst exponent of the fractional Broniaw motion", type="float")
+
+    (options, args) = parser.parse_args()
+
+    #print options.filename
+    print 'Program run with args:\nfilename prefix={0}\nsize={1}\nH={2}'.format(options.filename, options.size, options.H)
+
+    size = options.size
+    nx = options.size
+    ny = options.size
+    H  = options.H
+    
+    # 2d test
+    vx,vy = compute_div_free_2d(nx,ny,H)
+
+    # check that wx,wy is really divergence-free
+    #check_divergence(vx,vy)
+
+    # plot (vx,vy)
+    #demo_plot(vx,vy)
+
+    # 3d test
+    #vx,vy,vz = compute_div_free_3d(nx,ny,nz,H)
+        
+    # save data
+    saveXsm(options.filename+'_vx', vx)
+    saveXsm(options.filename+'_vy', vy)
+    #saveXsm(options.filename+'_vz', vz)
