@@ -8,24 +8,29 @@ set theScr {
     
     set logCmd dputs
     
-    # set a list of image identifiers (4 vector fields will be analyzed)
-    set image_list_x {brox1 brox2 brox3 brox4}
-    set image_list_y {broy1 broy2 broy3 broy4}
+    # set number of Images of this study
+    set numImages 2
 
     set type xsm_fftw${useFftw}_nmaxsup${useNMaxSup}
     dputs " wtmm $wavelet"
 
     # loop over vector fields
-    foreach imaIdf1 $image_list_x imaIdf2 $image_list_y {
+    for {set i 0} {$i<$numImages} {incr i} {
+	
+	set imaIdf1 fBm_vx$i
+	set imaIdf2 fBm_vy$i
 
 	logMsg "Vector field: $imaIdf1 $imaIdf2 "
 	# create data to be analyzed
 	# 2D Fractional Brownian vector field with default holder value
 	# defined in parameters_gaussian.tcl
-	ibro2Dfield ${imaIdf1} ${imaIdf2} $size -h $H
-	isave ${imaIdf1} ${baseDir}/${imaIdf1}
-	isave ${imaIdf2} ${baseDir}/${imaIdf2}
-
+	#ibro2Dfield ${imaIdf1} ${imaIdf2} $size -h $H
+	#isave ${imaIdf1} ${baseDir}/${imaIdf1}
+	#isave ${imaIdf2} ${baseDir}/${imaIdf2}
+	exec python compute_2dfBm_divfree.py -s $size -i $i
+	iload ${imaIdf1}.xsm ${imaIdf1}
+	iload ${imaIdf2}.xsm ${imaIdf2}
+	
 	file mkdir ${baseDir}/${imaIdf1}_${imaIdf2}_${type}_max_${wavelet}
 
 	# main WTMM command
@@ -60,17 +65,26 @@ set theScr {
 		-boxratio 1 \
 		-ecut [list $b1 $b1 $b2 $b2] \
 		-nomsg
-	
 
+	# pf method
+	set pf_method "Gradient max"
+	set pf_method_str "grad_max"
+	#set pf_method "Gradient lines"
+	#set pf_method_str "grad_lines"
+	
 	# pre-computations (intermediate result) of the partition functions
 	file mkdir ${baseDir}/pf
-	if {[file exists ${baseDir}/pf/pf_${type}_${imaIdf1}_${imaIdf2}_${wavelet}] == 0} {
+
+	# N is for normal  / regular partition function computations
+	set pf_suffix {N}
+	set pf_filename ${baseDir}/pf/pf_${type}_${imaIdf1}_${imaIdf2}_${wavelet}_${pf_method_str}_${pf_suffix}
+	if {[file exists $pf_filename] == 0} {
 	    dputs " Computing the pf..."
 	    
 	    set zepf [pf create]
-	    pf  init $zepf $amin $noct $nvox $q_lst $size "Gradient max" {}
+	    pf  init $zepf $amin $noct $nvox $q_lst $size $pf_method {}
 	    pf compute $zepf m
-	    pf save $zepf ${baseDir}/pf/pf_${type}_${imaIdf1}_${imaIdf2}_${wavelet}
+	    pf save $zepf ${pf_filename}
 	    pf destroy $zepf
 	    dputs " ok."
 	} else {
@@ -88,14 +102,16 @@ set theScr {
 		-boxratio 1 \
 		-ecut [list $b1 $b1 $b2 $b2] \
 		-nomsg
-	    
-	    if {[file exists ${baseDir}/pf/pf_${type}_${imaIdf1}_${imaIdf2}_${wavelet}_L] == 0} {
+
+	    set pf_suffix L
+	    set pf_filename ${baseDir}/pf/pf_${type}_${imaIdf1}_${imaIdf2}_${wavelet}_${pf_method_str}_${pf_suffix}
+	    if {[file exists ${pf_filename}] == 0} {
 		dputs " Computing Longitudinal pf..."
 		
 		set zepf [pf create]
-		pf  init $zepf $amin $noct $nvox $q_lst $size "Gradient max" {}
+		pf  init $zepf $amin $noct $nvox $q_lst $size $pf_method {}
 		pf compute $zepf m
-		pf save $zepf ${baseDir}/pf/pf_${type}_${imaIdf1}_${imaIdf2}_${wavelet}_L
+		pf save $zepf ${pf_filename}
 		pf destroy $zepf
 		dputs " ok."
 	    } else {
@@ -110,13 +126,15 @@ set theScr {
 		-ecut [list $b1 $b1 $b2 $b2] \
 		-nomsg
 	    
-	    if {[file exists ${baseDir}/pf/pf_${type}_${imaIdf1}_${imaIdf2}_${wavelet}_T] == 0} {
+	    set pf_suffix T
+	    set pf_filename ${baseDir}/pf/pf_${type}_${imaIdf1}_${imaIdf2}_${wavelet}_${pf_method_str}_${pf_suffix}
+	    if {[file exists ${pf_filename}] == 0} {
 		dputs " Computing Longitudinal pf..."
 		
 		set zepf [pf create]
-		pf  init $zepf $amin $noct $nvox $q_lst $size "Gradient max" {}
+		pf  init $zepf $amin $noct $nvox $q_lst $size $pf_method {}
 		pf compute $zepf m
-		pf save $zepf ${baseDir}/pf/pf_${type}_${imaIdf1}_${imaIdf2}_${wavelet}_T
+		pf save $zepf ${pf_filename}
 		pf destroy $zepf
 		dputs " ok."
 	    } else {

@@ -471,6 +471,8 @@ AC_CONFIG_FILES([
 	doc/templates/testXsmurf_scalar2d/parameters_mexican.tcl
 	doc/templates/testXsmurf_vector2d/parameters_gaussian.tcl
 	doc/templates/testXsmurf_vector2d/parameters_mexican.tcl
+	doc/templates/testXsmurf_vector2d_LT/parameters_gaussian.tcl
+	doc/templates/testXsmurf_vector2d_LT/parameters_mexican.tcl
 	doc/templates/testXsmurf_scalar3d/parameters_gaussian.tcl
 	doc/templates/testXsmurf_scalar3d/parameters_mexican.tcl
 	doc/templates/testXsmurf_vector3d/parameters_gaussian.tcl

@@ -24,13 +24,10 @@ type the following command:
 
 
 DATA: 2D Fractional Brownian Vector Field
-data are generated with the xsmurf command ibro2Dfield 
-inside the scr_gaussian.tcl script.
-
-more information about this command:
-   help ibro2Dfield
+data are generated with the python script compute_2dfBm_divfree.py
+locate at ${XSMURF_TOP_SRC_DIR}/utils
 
 
 
 To clean this directory:
-rm -Rf bro* *.eps pf logFile *~
+rm -Rf fBm* *.eps pf logFile *~
