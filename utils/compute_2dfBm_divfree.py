@@ -383,6 +383,9 @@ if __name__ == '__main__':
     parser.add_option("-f", "--file", dest="filename",
                       default="fBm",
                       help="write output files with given prefix", metavar="FILE")
+    parser.add_option("-i", "--fileId", dest="fileId",
+                      default=1,
+                      help="output filename suffix", type="int")
     parser.add_option("-s", "--size", dest="size",
                       default=64,
                       help="linear size of 3D data", type="int")
@@ -393,12 +396,13 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     #print options.filename
-    print 'Program run with args:\nfilename prefix={0}\nsize={1}\nH={2}'.format(options.filename, options.size, options.H)
+    print 'Program run with args:\nfilename prefix={0}\nsize={1}\nH={2}\nfileId={3}'.format(options.filename, options.size, options.H,options.fileId)
 
     size = options.size
     nx = options.size
     ny = options.size
     H  = options.H
+    fileId = options.fileId
     
     # 2d test
     vx = np.real(genFbm2d_scalar(nx,ny))
@@ -418,9 +422,9 @@ if __name__ == '__main__':
     #demo_plot(vx, vy, wx, wy)
 
     # save data (before divergence cleaning)
-    saveXsm(options.filename+'_vx', vx)
-    saveXsm(options.filename+'_vy', vy)
+    saveXsm(options.filename+'_vx'+str(fileId), vx)
+    saveXsm(options.filename+'_vy'+str(fileId), vy)
 
     # save data (after divergence cleaning)
-    saveXsm(options.filename+'_wx', wx)
-    saveXsm(options.filename+'_wy', wy)
+    saveXsm(options.filename+'_wx'+str(fileId), wx)
+    saveXsm(options.filename+'_wy'+str(fileId), wy)
