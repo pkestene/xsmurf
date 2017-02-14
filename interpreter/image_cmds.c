@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <netcdf.h>
 
 #include <string.h>
 #include <assert.h>
@@ -41,6 +42,7 @@
 #define SEUIL 10e-6
 
 #define log2(x) (log(x)/log(2))
+#define HANDLE_NETCDF_ERROR if (status != NC_NOERR) return GenErrorAppend(interp, "NetCDF error : ",status, NULL); 
 
 int next_power_of_2__(int i);
 
@@ -6149,6 +6151,146 @@ Ima3DFileLoadCmd_(ClientData clientData,
   
   return TCL_OK;
 }
+
+/************************************
+ * Command name in xsmurf : i3DloadnetCDF
+ ************************************/
+/* florian nguyen : creee le 14 fevrier 2017 */
+
+int Ima3DNetCDFLoadCmd_(ClientData clientData,
+		  Tcl_Interp *interp,
+		  int argc,
+		  char **argv)
+{ 
+  char * options[] = { "s[sss]", 
+		       NULL};
+  char * help_msg =
+    {("read a NetCDF file and put it in an image3D of name filename or name \n"
+      "(filename,[namevx,namevy,namevz]). Reading is done assume dimentions are named resolution_x, \n"
+      "resolution_y, resolution_z and velocity fields are named velocity_x, velocity_y,\n"
+      "velocity_z."
+      )};
+
+  char  * imageFilename = NULL;
+  char  * imageNamevx     = NULL; 
+  char  * imageNamevy     = NULL;
+  char  * imageNamevz     = NULL;
+  int     lx, ly, lz;
+  Image3D * imagevx = NULL;
+  Image3D * imagevy = NULL;
+  Image3D * imagevz = NULL;
+  real *datavx,*datavy,*datavz;
+  int status, ncid, dimidx, dimidy, dimidz;
+  int varidx, varidy, varidz;
+  int dim[3],start[3];
+  //char    tempBuffer[100], saveFormat[10];
+
+  if (arg_init(interp, argc, argv, options, help_msg))
+    return TCL_OK;
+  
+  if (arg_get(0, &imageFilename, &imageNamevx, &imageNamevy, &imageNamevz) == TCL_ERROR)
+    return TCL_ERROR;
+
+  if (!imageNamevx)
+  {
+    int ssize = strlen(imageFilename);
+    imageNamevx = (char *) malloc(ssize*sizeof(char));
+    imageNamevy = (char *) malloc(ssize*sizeof(char));
+    imageNamevy = (char *) malloc(ssize*sizeof(char));
+    strcpy(imageNamevx,imageFilename);
+    strcpy(imageNamevy,imageFilename);
+    strcpy(imageNamevz,imageFilename);
+    imageNamevx[ssize-1]='x';
+    imageNamevy[ssize-1]='y';
+    imageNamevz[ssize-1]='z';
+    imageNamevx[ssize-2]='v';
+    imageNamevy[ssize-2]='v';
+    imageNamevz[ssize-2]='v';
+    imageNamevx[ssize-3]='_';
+    imageNamevy[ssize-3]='_';
+    imageNamevz[ssize-3]='_';
+  }
+
+  status = nc_open(imageFilename,NC_NOWRITE,&ncid);
+  HANDLE_NETCDF_ERROR
+
+  // dimensions
+
+  status = nc_inq_dimid(ncid,"resolution_x",&dimidx);
+  HANDLE_NETCDF_ERROR
+
+  status = nc_inq_dimlen(ncid,dimidx,&lx);
+  HANDLE_NETCDF_ERROR
+
+  status = nc_inq_dimid(ncid,"resolution_y",&dimidy);
+  HANDLE_NETCDF_ERROR
+
+  status = nc_inq_dimlen(ncid,dimidy,&ly);
+  HANDLE_NETCDF_ERROR
+
+  status = nc_inq_dimid(ncid,"resolution_z",&dimidz);
+  HANDLE_NETCDF_ERROR
+
+  status = nc_inq_dimlen(ncid,dimidz,&lz);
+  HANDLE_NETCDF_ERROR
+
+  // variable
+
+  status = nc_inq_varid(ncid,"velocity_x",&varidx);
+  HANDLE_NETCDF_ERROR
+  
+  //if (lz == NC_UNLIMITED) // check actual size
+  //{
+    status = nc_inq_vardimid(ncid,varidx,dim);
+    HANDLE_NETCDF_ERROR
+    
+    lz = dim[2];
+  //}
+  
+  start[0] = 1;
+  start[1] = 1;
+  start[2] = 1;
+  
+  
+  imagevx = im3D_new(lx,ly,lz,lx*ly*lz,PHYSICAL);
+  
+  datavx = imagevx->data;
+  
+  status = nc_get_vara_float(ncid,varidx,start,dim,datavx);
+  HANDLE_NETCDF_ERROR
+  
+  imagevy = im3D_new(lx,ly,lz,lx*ly*lz,PHYSICAL);
+  
+  datavy = imagevy->data;
+  
+  status = nc_get_vara_float(ncid,varidy,start,dim,datavy);
+  HANDLE_NETCDF_ERROR
+  
+  imagevz = im3D_new(lx,ly,lz,lx*ly*lz,PHYSICAL);
+  
+  datavz = imagevz->data;
+  
+  status = nc_get_vara_float(ncid,varidz,start,dim,datavz);
+  HANDLE_NETCDF_ERROR
+  
+  // send to TCL
+  
+  
+  store_image3D(imageNamevx, imagevx);
+  Tcl_AppendResult(interp, imageNamevx, NULL);
+  store_image3D(imageNamevy, imagevy);
+  Tcl_AppendResult(interp, imageNamevy, NULL);
+  store_image3D(imageNamevz, imagevz);
+  Tcl_AppendResult(interp, imageNamevz, NULL);
+
+  status = nc_close(ncid);
+  HANDLE_NETCDF_ERROR
+
+  return TCL_OK;
+
+}
+
+  
 
 /************************************
  * Command name in xsmurf : i3Dsave

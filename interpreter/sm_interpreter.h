@@ -232,6 +232,7 @@ int ImaFileSaveCmd_ (ClientData,Tcl_Interp*,int,char**);
 int ImaFileLoadCmd_ (ClientData,Tcl_Interp*,int,char**);
 int ImaFileLoadHdf5Cmd_ (ClientData,Tcl_Interp*,int,char**);
 int Ima3DFileLoadCmd_ (ClientData,Tcl_Interp*,int,char**);
+int Ima3DNetCDFLoadCmd_ (ClientData,Tcl_Interp*,int,char**);
 int Ima3DSaveFileCmd_ (ClientData,Tcl_Interp*,int,char**);
 
 int ImaColorizeRectangleCmd_ (ClientData,Tcl_Interp*,int,char**);

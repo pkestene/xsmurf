@@ -322,6 +322,7 @@ static cmd_info image_cmds[] = {
   {"iload",      (Tcl_CmdProc *) ImaFileLoadCmd_},
   {"iloadHdf5",  (Tcl_CmdProc *) ImaFileLoadHdf5Cmd_},
   {"i3Dload",    (Tcl_CmdProc *) Ima3DFileLoadCmd_},
+  {"i3DloadnetCDF",    (Tcl_CmdProc *) Ima3DNetCDFLoadCmd_},
   {"i3Dsave",    (Tcl_CmdProc *) Ima3DSaveFileCmd_},
 
   {"icolorizerect", (Tcl_CmdProc *) ImaColorizeRectangleCmd_},
