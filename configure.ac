@@ -413,6 +413,14 @@ AX_LIB_HDF5()
 AM_CONDITIONAL(HAVE_HDF5, test "$with_hdf5" = "yes")
 AM_CONDITIONAL(HAVE_HDF5_PARALLEL, test "$HDF5_PARALLEL_ENABLED" = "yes")
 
+# ------------------------------------------------------------------------------
+#    Check for lib NetCDF4
+# ------------------------------------------------------------------------------
+CONFIGURE_HEADLINE([ NetCDF4 support ])
+AX_LIB_NETCDF4()
+AM_CONDITIONAL(HAVE_NETCDF4_COND, test "$with_netcdf4" = "yes")
+
+
 #######################################################
 #######################################################
 #######################################################
@@ -495,4 +503,5 @@ AC_MSG_RESULT([
 	* FFTW3 single precision : $is_fftw_ok
 	* FFTW3 threads		 : $fftw_threads_ok
 	* HDF5 enabled           : $with_hdf5 ($HDF5_VERSION)
+	* NETCDF4 enabled        : $with_netcdf4 ($NETCDF4_VERSION)
 ])
