@@ -27,6 +27,7 @@ Tcl/Tk (with header files), libfftw (single precision), libjpeg, libmatheval (wi
 (symbol FFTW_ENABLE_FLOAT must be defined). This is OK, if you installed FFTW3 using apt-get, but if you installed it from sources, make sure to have used option '--enable-float' when configuring fftw3 sources:
 
 ```bash
+./bootstrap.sh
 ./configure --enable-float --prefix=/some/directory --enable-shared --disable-static --enable-type-prefix
 make
 make install
@@ -46,17 +47,23 @@ Tcllib
 
 Execute following commands:
 
+```shell
 	./configure --with-tcl=/usr/lib/tcl8.5 --with-tk=/usr/lib/tk8.5 --with-hdf5=no
+```
 
 ## Build
 
-	make
+```shell
+   make
+```
 
 # Run
 
 launch executable (launch tk console with our customized tcl interpreter)
 
-	./main/xsmurf
+```shell
+  ./main/xsmurf
+```
 
 # Documentation
 
