@@ -19,6 +19,7 @@ Tcl/Tk (with header files), libfftw (single precision), libjpeg, libmatheval (wi
 
    On Ubuntu/Debian like system:
 ```bash
+   sudo apt-get install automake libtool pkg-config autoconf autoconf-archive
    sudo apt-get install libfftw3-dev tcl8.5-dev tk8.5-dev libmatheval-dev libjpeg-dev
    sudo apt-get install libx11-dev libxi-dev libxt-dev libxmu-dev libxau-dev
 ```
@@ -55,6 +56,8 @@ Execute following commands:
 
 ```shell
    make
+   # additionnal extra step
+   cp ./main/smurfrc ~/.smurfrc
 ```
 
 # Run
